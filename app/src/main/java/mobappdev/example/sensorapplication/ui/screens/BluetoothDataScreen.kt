@@ -22,6 +22,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -29,16 +30,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mobappdev.example.sensorapplication.ui.state.DataUiState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import mobappdev.example.sensorapplication.ui.viewmodels.CombinedSensorData
+import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 
 @Composable
 fun BluetoothDataScreen(
-    state: DataUiState,
-    onConnect: () -> Unit,
-    onDisconnect: () -> Unit,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
+    vm: DataVM
 ) {
+    val state = vm.state.collectAsStateWithLifecycle().value
+    val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
+
+    val value: String = when (val combinedSensorData = vm.combinedDataFlow.collectAsState().value) {
+        is CombinedSensorData.GyroData -> {
+            val triple = combinedSensorData.gyro
+            if (triple == null) {
+                "-"
+            } else {
+                String.format("%.1f, %.1f, %.1f", triple.first, triple.second, triple.third)
+            }
+
+        }
+        is CombinedSensorData.HrData -> combinedSensorData.hr.toString()
+        else -> "-"
+    }
 
     Column(
         modifier = Modifier
@@ -53,8 +68,8 @@ fun BluetoothDataScreen(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = state.currentHR?.toString() ?: "-",
-                fontSize = 128.sp,
+                text = if(state.measuring) value else "-",
+                fontSize = if (value.length < 3) 128.sp else 54.sp,
                 color = Color.Black,
             )
         }
@@ -64,17 +79,17 @@ fun BluetoothDataScreen(
             modifier = Modifier.fillMaxWidth()
         ){
             Button(
-                onClick = onConnect,
+                onClick = vm::connectToSensor,
                 enabled = !state.connected,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Connect")
+                Text(text = "Connect\n${deviceId}")
             }
             Button(
-                onClick = onDisconnect,
+                onClick = vm::disconnectFromSensor,
                 enabled = state.connected,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -91,7 +106,7 @@ fun BluetoothDataScreen(
             modifier = Modifier.fillMaxWidth()
         ){
             Button(
-                onClick = onStart,
+                onClick = vm::startHr,
                 enabled = (state.connected && !state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -101,14 +116,31 @@ fun BluetoothDataScreen(
                 Text(text = "Start\nHr Stream")
             }
             Button(
-                onClick = onStop,
-                enabled = (state.connected && state.measuring),
+                onClick = vm::startGyro,
+                enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Stop\nHr Stream")
+                Text(text = "Start\nGyro Stream")
+            }
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier.fillMaxWidth()
+        ){
+            Button(
+                onClick = vm::stopDataStream,
+                enabled = (state.measuring),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = Color.Gray
+                )
+            ) {
+                Text(text = "Stop\nstream")
             }
         }
     }

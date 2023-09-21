@@ -68,6 +68,12 @@ class AndroidPolarController (
 
     init {
         api.setPolarFilter(false)
+
+        val enableSdkLogs = false
+        if(enableSdkLogs) {
+            api.setApiLogger { s: String -> Log.d("Polar API Logger", s) }
+        }
+
         api.setApiCallback(object: PolarBleApiCallback() {
             override fun batteryLevelReceived(identifier: String, level: Int) {
                 Log.d(TAG, "BATTERY LEVEL: $level")

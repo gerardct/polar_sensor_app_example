@@ -5,12 +5,10 @@ package mobappdev.example.sensorapplication.ui
  * Purpose: Defines the main activity of the application.
  * Author: Jitse van Esch
  * Created: 2023-07-08
- * Last modified: 2023-07-11
+ * Last modified: 2023-09-21
  */
 
-
 import android.Manifest
-import android.bluetooth.BluetoothManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,10 +16,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import mobappdev.example.sensorapplication.ui.screens.BluetoothDataScreen
 import mobappdev.example.sensorapplication.ui.theme.SensorapplicationTheme
@@ -48,7 +44,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             SensorapplicationTheme {
                 val dataVM = hiltViewModel<DataVM>()
-                val dataState by dataVM.state.collectAsStateWithLifecycle()
 
                 // Use hardcoded deviceID
                 dataVM.chooseSensor(deviceId)
@@ -59,11 +54,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     BluetoothDataScreen(
-                        state = dataState,
-                        onConnect = dataVM::connectToSensor,
-                        onDisconnect = dataVM::disconnectFromSensor,
-                        onStart = dataVM::acquireHr,
-                        onStop = dataVM::stopHr
+                        vm = dataVM
                     )
                 }
             }
