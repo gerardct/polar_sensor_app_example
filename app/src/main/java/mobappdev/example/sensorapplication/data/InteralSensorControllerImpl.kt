@@ -70,6 +70,7 @@ class InternalSensorControllerImpl(
         // Update the previous filtered angle for the next iteration
         lastFilteredAngle = filteredAngle
         return filteredAngle
+
     }
 
 
