@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.domain.InternalSensorController
+import kotlin.math.sqrt
 
 private const val LOG_TAG = "Internal Sensor Controller"
 
@@ -55,6 +56,23 @@ class InternalSensorControllerImpl(
     private val gyroSensor: Sensor? by lazy {
         sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
     }
+
+    // ALGORITHM 1: compute angle of elevation
+    private var lastFilteredAngle: Float = 0.0f
+    private val alpha: Float = 0.2f // for the filter
+
+    private fun computeAngleOfElevation (ax: Float, ay: Float, az: Float): Float {
+        //calculate the angle
+        val angle = Math.atan2(az.toDouble(), sqrt(ax * ax + ay * ay).toDouble()).toFloat()
+
+        // EWMA Filter
+        val filteredAngle = alpha * angle + (1 - alpha) * lastFilteredAngle
+        // Update the previous filtered angle for the next iteration
+        lastFilteredAngle = filteredAngle
+        return filteredAngle
+    }
+
+
 
     override fun startImuStream() {
         // Todo: implement
@@ -102,6 +120,19 @@ class InternalSensorControllerImpl(
         if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
             // Extract gyro data (angular speed around X, Y, and Z axes
             _currentGyro = Triple(event.values[0], event.values[1], event.values[2])
+        }
+        //if the acceleration changes
+        if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
+            // linear acceleration data:
+            val ax = event.values[0]
+            val ay = event.values[1]
+            val az = event.values[2]
+
+            // compute angle of elevation
+            val angle = computeAngleOfElevation(ax, ay, az)
+
+            // Update UI or perform further processing with the angle
+            _currentLinAccUI.value = Triple(ax, ay, az)
         }
     }
 
