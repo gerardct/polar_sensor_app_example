@@ -116,7 +116,7 @@ fun BluetoothDataScreen(
                 Text(text = "Start\nHr Stream")
             }
             Button(
-                onClick = vm::startGyro,
+                onClick = vm::startAcc,
                 enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,

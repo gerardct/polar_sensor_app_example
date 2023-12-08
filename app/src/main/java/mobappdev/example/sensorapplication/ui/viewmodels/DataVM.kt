@@ -11,6 +11,7 @@ package mobappdev.example.sensorapplication.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.polar.sdk.api.model.PolarAccelerometerData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,18 +32,18 @@ class DataVM @Inject constructor(
 
     private val gyroDataFlow = internalSensorController.currentGyroUI
     private val hrDataFlow = polarController.currentHR
+    private val accDataFlow = polarController.currentAcceleration
 
-    // Combine the two data flows
-    val combinedDataFlow= combine(
+    val combinedDataFlow = combine(
         gyroDataFlow,
         hrDataFlow,
-    ) { gyro, hr ->
-        if (hr != null ) {
-            CombinedSensorData.HrData(hr)
-        } else if (gyro != null) {
-            CombinedSensorData.GyroData(gyro)
-        } else {
-            null
+        accDataFlow
+    ) { gyro, hr, acc ->
+        when {
+            hr != null -> CombinedSensorData.HrData(hr)
+            gyro != null -> CombinedSensorData.GyroData(gyro)
+            acc != null -> CombinedSensorData.AccelerometerData(acc)
+            else -> null
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -92,14 +93,23 @@ class DataVM @Inject constructor(
         _state.update { it.copy(measuring = true) }
     }
 
-    fun stopDataStream(){
+    fun startAcc() {
+        polarController.startAccStreaming(_deviceId.value)
+        streamType = StreamType.FOREIGN_ACC
+        _state.update { it.copy(measuring = true) }
+    }
+
+
+    fun stopDataStream() {
         when (streamType) {
             StreamType.LOCAL_GYRO -> internalSensorController.stopGyroStream()
             StreamType.FOREIGN_HR -> polarController.stopHrStreaming()
+            StreamType.FOREIGN_ACC -> polarController.stopAccStreaming()
             else -> {} // Do nothing
         }
         _state.update { it.copy(measuring = false) }
     }
+
 }
 
 data class DataUiState(
@@ -109,10 +119,11 @@ data class DataUiState(
 )
 
 enum class StreamType {
-    LOCAL_GYRO, LOCAL_ACC, FOREIGN_HR
+    LOCAL_GYRO, LOCAL_ACC, FOREIGN_HR, FOREIGN_ACC
 }
 
 sealed class CombinedSensorData {
     data class GyroData(val gyro: Triple<Float, Float, Float>?) : CombinedSensorData()
     data class HrData(val hr: Int?) : CombinedSensorData()
+    data class AccelerometerData(val acc: PolarAccelerometerData?) : CombinedSensorData()
 }

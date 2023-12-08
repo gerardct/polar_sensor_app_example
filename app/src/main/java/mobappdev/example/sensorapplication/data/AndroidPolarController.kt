@@ -15,8 +15,10 @@ import com.polar.sdk.api.PolarBleApi
 import com.polar.sdk.api.PolarBleApiCallback
 import com.polar.sdk.api.PolarBleApiDefaultImpl
 import com.polar.sdk.api.errors.PolarInvalidArgument
+import com.polar.sdk.api.model.PolarAccelerometerData
 import com.polar.sdk.api.model.PolarDeviceInfo
 import com.polar.sdk.api.model.PolarHrData
+import com.polar.sdk.api.model.PolarSensorSetting
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,12 +44,13 @@ class AndroidPolarController (
                 PolarBleApi.PolarBleSdkFeature.FEATURE_POLAR_OFFLINE_RECORDING,
                 PolarBleApi.PolarBleSdkFeature.FEATURE_POLAR_ONLINE_STREAMING,
                 PolarBleApi.PolarBleSdkFeature.FEATURE_POLAR_DEVICE_TIME_SETUP,
-                PolarBleApi.PolarBleSdkFeature.FEATURE_DEVICE_INFO
+                PolarBleApi.PolarBleSdkFeature.FEATURE_DEVICE_INFO,
             )
         )
     }
 
     private var hrDisposable: Disposable? = null
+    private var accDisposable: Disposable? = null
     private val TAG = "AndroidPolarController"
 
     private val _currentHR = MutableStateFlow<Int?>(null)
@@ -66,8 +69,15 @@ class AndroidPolarController (
     override val measuring: StateFlow<Boolean>
         get() = _measuring.asStateFlow()
 
+    private val _currentAcceleration = MutableStateFlow<PolarAccelerometerData?>(null)
+    override val currentAcceleration: StateFlow<PolarAccelerometerData?>
+        get() = _currentAcceleration.asStateFlow()
+
+    private val _accelerationList = MutableStateFlow<List<PolarAccelerometerData>>(emptyList())
+    override val accelerationList: StateFlow<List<PolarAccelerometerData>>
+        get() = _accelerationList.asStateFlow()
     init {
-        api.setPolarFilter(false)
+        api.setPolarFilter(false) //if true, only Polar devices are looked for
 
         val enableSdkLogs = false
         if(enableSdkLogs) {
@@ -145,5 +155,43 @@ class AndroidPolarController (
         _measuring.update { false }
         hrDisposable?.dispose()
         _currentHR.update { null }
+    }
+    override fun startAccStreaming(deviceId: String) {
+        val isDisposed = accDisposable?.isDisposed ?: true
+        if (isDisposed) {
+            _measuring.update { true }
+
+            val sensorSettings = mapOf(
+                PolarSensorSetting.SettingType.CHANNELS to 3,
+                PolarSensorSetting.SettingType.RANGE to 10,
+                PolarSensorSetting.SettingType.RESOLUTION to 16,
+                PolarSensorSetting.SettingType.SAMPLE_RATE to 25
+            )
+
+            val polarSensorSettings = PolarSensorSetting(sensorSettings)
+
+            accDisposable = api.startAccStreaming(deviceId, polarSensorSettings)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    { accData: PolarAccelerometerData ->
+                        _currentAcceleration.value = accData
+                        _accelerationList.update { accelerationList ->
+                            accelerationList + accData
+                        }
+                    },
+                    { error: Throwable ->
+                        Log.e(TAG, "Acceleration stream failed.\nReason: $error")
+                    },
+                    { Log.d(TAG, "Acceleration stream complete") }
+                )
+        } else {
+            Log.d(TAG, "Already streaming")
+        }
+    }
+
+    override fun stopAccStreaming() {
+        _measuring.update { false }
+        accDisposable?.dispose()
+        _currentAcceleration.update { null }
     }
 }
