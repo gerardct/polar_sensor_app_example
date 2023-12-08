@@ -166,41 +166,6 @@ class AndroidPolarController(
         hrDisposable?.dispose()
         _currentHR.update { null }
     }
-    override fun startAccStreaming(deviceId: String) {
-        val isDisposed = accDisposable?.isDisposed ?: true
-        if (isDisposed) {
-            _measuring.update { true }
-
-            val sensorSettings = mapOf(
-                PolarSensorSetting.SettingType.CHANNELS to 3,
-                PolarSensorSetting.SettingType.RANGE to 8,
-                PolarSensorSetting.SettingType.RESOLUTION to 16,
-                PolarSensorSetting.SettingType.SAMPLE_RATE to 52
-            )
-
-            val polarSensorSettings = PolarSensorSetting(sensorSettings)
-
-            accDisposable = api.startAccStreaming(deviceId, polarSensorSettings)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    { accData: PolarAccelerometerData ->
-                        for (sample in accData.samples) {
-                            val accelerationTriple = Triple(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
-                            _currentAcceleration.update { accelerationTriple }
-                            _accelerationList.update { accelerationList ->
-                                accelerationList + accelerationTriple
-                            }
-                        }
-                    },
-                    { error: Throwable ->
-                        Log.e(TAG, "Acceleration stream failed.\nReason: $error")
-                    },
-                    { Log.d(TAG, "Acceleration stream complete") }
-                )
-        } else {
-            Log.d(TAG, "Already streaming")
-        }
-    }
 
     override fun stopAccStreaming() {
         _measuring.update { false }
@@ -223,6 +188,44 @@ class AndroidPolarController(
         return filteredAngle
     }
 
+    override fun startAccStreaming(deviceId: String) {
+        val isDisposed = accDisposable?.isDisposed ?: true
+        if (isDisposed) {
+            _measuring.update { true }
+
+            val sensorSettings = mapOf(
+                PolarSensorSetting.SettingType.CHANNELS to 3,
+                PolarSensorSetting.SettingType.RANGE to 8,
+                PolarSensorSetting.SettingType.RESOLUTION to 16,
+                PolarSensorSetting.SettingType.SAMPLE_RATE to 52
+            )
+
+            val polarSensorSettings = PolarSensorSetting(sensorSettings)
+
+            accDisposable = api.startAccStreaming(deviceId, polarSensorSettings)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    { accData: PolarAccelerometerData ->
+                        for (sample in accData.samples) {
+                            val accelerationTriple = Triple(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
+                            _currentAcceleration.update { accelerationTriple }
+
+                            // Compute angle of elevation
+                            val angle = computeAngleOfElevation(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
+
+                            // Update angle of elevation
+                            _currentAngleOfElevation.update { angle }
+                        }
+                    },
+                    { error: Throwable ->
+                        Log.e(TAG, "Acceleration stream failed.\nReason: $error")
+                    },
+                    { Log.d(TAG, "Acceleration stream complete") }
+                )
+        } else {
+            Log.d(TAG, "Already streaming")
+        }
+    }
 
     override fun onSensorChanged(event: SensorEvent) {
         // If the acceleration changes
