@@ -18,6 +18,7 @@ interface PolarController {
 
     val currentAcceleration: StateFlow<Triple<Float, Float, Float>?>
     val accelerationList: StateFlow<List<Triple<Float, Float, Float>?>>
+    val currentAngleOfElevation: StateFlow<Float?>
 
     val connected: StateFlow<Boolean>
     val measuring: StateFlow<Boolean>
@@ -30,5 +31,4 @@ interface PolarController {
 
     fun startAccStreaming(deviceId: String)
     fun stopAccStreaming()
-
 }

@@ -10,6 +10,9 @@ package mobappdev.example.sensorapplication.data
  */
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
 import android.util.Log
 import com.polar.sdk.api.PolarBleApi
 import com.polar.sdk.api.PolarBleApiCallback
@@ -27,10 +30,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import mobappdev.example.sensorapplication.domain.PolarController
 import java.util.UUID
+import kotlin.math.atan2
+import kotlin.math.sqrt
 
-class AndroidPolarController (
+class AndroidPolarController(
     private val context: Context,
-): PolarController {
+) : PolarController, SensorEventListener {
 
     private val api: PolarBleApi by lazy {
         // Notice all features are enabled
@@ -76,6 +81,11 @@ class AndroidPolarController (
     private val _accelerationList = MutableStateFlow<List<Triple<Float, Float, Float>?>>(emptyList())
     override val accelerationList: StateFlow<List<Triple<Float, Float, Float>?>>
         get() = _accelerationList.asStateFlow()
+
+    private val _currentAngleOfElevation = MutableStateFlow<Float?>(null)
+    override val currentAngleOfElevation: StateFlow<Float?>
+        get() = _currentAngleOfElevation.asStateFlow()
+
     init {
         api.setPolarFilter(false) //if true, only Polar devices are looked for
 
@@ -192,11 +202,46 @@ class AndroidPolarController (
         }
     }
 
-
-
     override fun stopAccStreaming() {
         _measuring.update { false }
         accDisposable?.dispose()
         _currentAcceleration.update { null }
+    }
+
+    // ALGORITHM 1: compute angle of elevation
+    private var lastFilteredAngle: Float = 0.0f
+    private val alpha: Float = 0.2f // for the filter
+
+    private fun computeAngleOfElevation(ax: Float, ay: Float, az: Float): Float {
+        // Calculate the angle
+        val angle = atan2(az.toDouble(), sqrt(ax * ax + ay * ay).toDouble()).toFloat()
+
+        // EWMA Filter
+        val filteredAngle = alpha * angle + (1 - alpha) * lastFilteredAngle
+        // Update the previous filtered angle for the next iteration
+        lastFilteredAngle = filteredAngle
+        return filteredAngle
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        // If the acceleration changes
+        if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
+            // Linear acceleration data
+            val ax = event.values[0]
+            val ay = event.values[1]
+            val az = event.values[2]
+
+            // Compute angle of elevation
+            val angle = computeAngleOfElevation(ax, ay, az)
+
+            // Update UI or perform further processing with the angle
+            _currentAcceleration.value = Triple(ax, ay, az)
+
+            // Update angle of elevation
+            _currentAngleOfElevation.value = angle
+        }
+    }
+    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+        // Not used in this example
     }
 }

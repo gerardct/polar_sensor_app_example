@@ -32,16 +32,18 @@ class DataVM @Inject constructor(
     private val gyroDataFlow = internalSensorController.currentGyroUI
     private val hrDataFlow = polarController.currentHR
     private val accDataFlow = polarController.currentAcceleration
+    private val angleDataFlow = polarController.currentAngleOfElevation
 
     val combinedDataFlow = combine(
         gyroDataFlow,
         hrDataFlow,
-        accDataFlow
-    ) { gyro, hr, acc ->
+        accDataFlow,
+        angleDataFlow
+    ) { gyro, hr, acc, ang ->
         when {
             hr != null -> CombinedSensorData.HrData(hr)
             gyro != null -> CombinedSensorData.GyroData(gyro)
-            acc != null -> CombinedSensorData.AccelerometerData(acc)
+            acc != null -> CombinedSensorData.AccelerometerData(acc,ang)
             else -> null
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -128,5 +130,8 @@ enum class StreamType {
 sealed class CombinedSensorData {
     data class GyroData(val gyro: Triple<Float, Float, Float>?) : CombinedSensorData()
     data class HrData(val hr: Int?) : CombinedSensorData()
-    data class AccelerometerData(val acc: Triple<Float, Float, Float>?) : CombinedSensorData()
+    data class AccelerometerData(val acc: Triple<Float, Float, Float>?, val angle: Float?) : CombinedSensorData()
+    data class AngleOfElevationData(val angle: Float?) : CombinedSensorData()
 }
+
+
