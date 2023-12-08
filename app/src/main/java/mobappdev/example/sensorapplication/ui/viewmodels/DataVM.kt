@@ -11,7 +11,6 @@ package mobappdev.example.sensorapplication.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.polar.sdk.api.model.PolarAccelerometerData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -50,11 +49,13 @@ class DataVM @Inject constructor(
     private val _state = MutableStateFlow(DataUiState())
     val state = combine(
         polarController.hrList,
+        polarController.accelerationList,
         polarController.connected,
         _state
-    ) { hrList, connected, state ->
+    ) { hrList, accelerationList, connected, state ->
         state.copy(
             hrList = hrList,
+            accelerationList = accelerationList,
             connected = connected,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
@@ -114,9 +115,11 @@ class DataVM @Inject constructor(
 
 data class DataUiState(
     val hrList: List<Int> = emptyList(),
+    val accelerationList: List<Triple<Float, Float, Float>?> = emptyList(), // Define the type of data in the list
     val connected: Boolean = false,
     val measuring: Boolean = false
 )
+
 
 enum class StreamType {
     LOCAL_GYRO, LOCAL_ACC, FOREIGN_HR, FOREIGN_ACC
@@ -125,5 +128,5 @@ enum class StreamType {
 sealed class CombinedSensorData {
     data class GyroData(val gyro: Triple<Float, Float, Float>?) : CombinedSensorData()
     data class HrData(val hr: Int?) : CombinedSensorData()
-    data class AccelerometerData(val acc: PolarAccelerometerData?) : CombinedSensorData()
+    data class AccelerometerData(val acc: Triple<Float, Float, Float>?) : CombinedSensorData()
 }

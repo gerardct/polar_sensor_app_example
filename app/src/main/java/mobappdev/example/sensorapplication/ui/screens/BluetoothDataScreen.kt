@@ -49,9 +49,17 @@ fun BluetoothDataScreen(
             } else {
                 String.format("%.1f, %.1f, %.1f", triple.first, triple.second, triple.third)
             }
-
         }
         is CombinedSensorData.HrData -> combinedSensorData.hr.toString()
+        is CombinedSensorData.AccelerometerData -> {
+            val accData = combinedSensorData.acc
+            if (accData == null) {
+                "-"
+            } else {
+                // Adjust how you want to display the accelerometer data
+                String.format("%.1f, %.1f, %.1f", accData.first, accData.second, accData.third)
+            }
+        }
         else -> "-"
     }
 

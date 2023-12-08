@@ -16,8 +16,8 @@ interface PolarController {
     val currentHR: StateFlow<Int?>
     val hrList: StateFlow<List<Int>>
 
-    val currentAcceleration: StateFlow<PolarAccelerometerData?>
-    val accelerationList: StateFlow<List<PolarAccelerometerData>>
+    val currentAcceleration: StateFlow<Triple<Float, Float, Float>?>
+    val accelerationList: StateFlow<List<Triple<Float, Float, Float>?>>
 
     val connected: StateFlow<Boolean>
     val measuring: StateFlow<Boolean>

@@ -69,12 +69,12 @@ class AndroidPolarController (
     override val measuring: StateFlow<Boolean>
         get() = _measuring.asStateFlow()
 
-    private val _currentAcceleration = MutableStateFlow<PolarAccelerometerData?>(null)
-    override val currentAcceleration: StateFlow<PolarAccelerometerData?>
+    private val _currentAcceleration = MutableStateFlow<Triple<Float, Float, Float>?>(null)
+    override val currentAcceleration: StateFlow<Triple<Float, Float, Float>?>
         get() = _currentAcceleration.asStateFlow()
 
-    private val _accelerationList = MutableStateFlow<List<PolarAccelerometerData>>(emptyList())
-    override val accelerationList: StateFlow<List<PolarAccelerometerData>>
+    private val _accelerationList = MutableStateFlow<List<Triple<Float, Float, Float>?>>(emptyList())
+    override val accelerationList: StateFlow<List<Triple<Float, Float, Float>?>>
         get() = _accelerationList.asStateFlow()
     init {
         api.setPolarFilter(false) //if true, only Polar devices are looked for
@@ -163,9 +163,9 @@ class AndroidPolarController (
 
             val sensorSettings = mapOf(
                 PolarSensorSetting.SettingType.CHANNELS to 3,
-                PolarSensorSetting.SettingType.RANGE to 10,
+                PolarSensorSetting.SettingType.RANGE to 8,
                 PolarSensorSetting.SettingType.RESOLUTION to 16,
-                PolarSensorSetting.SettingType.SAMPLE_RATE to 25
+                PolarSensorSetting.SettingType.SAMPLE_RATE to 52
             )
 
             val polarSensorSettings = PolarSensorSetting(sensorSettings)
@@ -174,9 +174,12 @@ class AndroidPolarController (
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     { accData: PolarAccelerometerData ->
-                        _currentAcceleration.value = accData
-                        _accelerationList.update { accelerationList ->
-                            accelerationList + accData
+                        for (sample in accData.samples) {
+                            val accelerationTriple = Triple(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
+                            _currentAcceleration.update { accelerationTriple }
+                            _accelerationList.update { accelerationList ->
+                                accelerationList + accelerationTriple
+                            }
                         }
                     },
                     { error: Throwable ->
@@ -188,6 +191,8 @@ class AndroidPolarController (
             Log.d(TAG, "Already streaming")
         }
     }
+
+
 
     override fun stopAccStreaming() {
         _measuring.update { false }
