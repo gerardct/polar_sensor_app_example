@@ -23,4 +23,5 @@ interface PolarController {
 
     fun startHrStreaming(deviceId: String)
     fun stopHrStreaming()
+
 }
