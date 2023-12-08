@@ -59,7 +59,7 @@ class InternalSensorControllerImpl(
 
     // ALGORITHM 1: compute angle of elevation
     private var lastFilteredAngle: Float = 0.0f
-    private val alpha: Float = 0.2f // for the filter --> Change?
+    private val alpha: Float = 0.9f // for the filter --> Change?
 
     private fun computeAngleOfElevation (ax: Float, ay: Float, az: Float): Float {
         //calculate the angle
@@ -74,7 +74,7 @@ class InternalSensorControllerImpl(
     }
 
     // ALGORITHM 2: Complimentary filter combining linear acceleration and gyroscope
-    private val alpha2: Float = 0.98f // filter factor for acceleration
+    private val alpha2: Float = 0.98f // filter factor
 
     private fun applyComplementaryFilter(ax: Float, ay: Float, az: Float, gyro: Triple<Float, Float, Float>): Triple<Float, Float, Float> {
         // equation for complimentary filter:
