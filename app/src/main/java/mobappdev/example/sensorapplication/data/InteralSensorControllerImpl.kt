@@ -59,7 +59,7 @@ class InternalSensorControllerImpl(
 
     // ALGORITHM 1: compute angle of elevation
     private var lastFilteredAngle: Float = 0.0f
-    private val alpha: Float = 0.2f // for the filter
+    private val alpha: Float = 0.2f // for the filter --> Change?
 
     private fun computeAngleOfElevation (ax: Float, ay: Float, az: Float): Float {
         //calculate the angle
@@ -71,6 +71,18 @@ class InternalSensorControllerImpl(
         lastFilteredAngle = filteredAngle
         return filteredAngle
 
+    }
+
+    // ALGORITHM 2: Complimentary filter combining linear acceleration and gyroscope
+    private val alpha2: Float = 0.98f // filter factor for acceleration
+
+    private fun applyComplementaryFilter(ax: Float, ay: Float, az: Float, gyro: Triple<Float, Float, Float>): Triple<Float, Float, Float> {
+        // equation for complimentary filter:
+        val filteredAccelerationX = alpha2 * ax + (1 - alpha2) * gyro.first
+        val filteredAccelerationY = alpha2 * ay + (1 - alpha2) * gyro.second
+        val filteredAccelerationZ = alpha2 * az + (1 - alpha2) * gyro.third
+
+        return Triple(filteredAccelerationX, filteredAccelerationY, filteredAccelerationZ)
     }
 
 
@@ -118,18 +130,26 @@ class InternalSensorControllerImpl(
     }
 
     override fun onSensorChanged(event: SensorEvent) {
+        // linear acceleration data:
+        val ax = event.values[0]
+        val ay = event.values[1]
+        val az = event.values[2]
+
         if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-            // Extract gyro data (angular speed around X, Y, and Z axes
+            // Extract gyro data (angular speed around X, Y, and Z axes (for algorithm 2)
             _currentGyro = Triple(event.values[0], event.values[1], event.values[2])
+
+            // Apply complementary filter for gyroscope (for algorithm 2)
+            val filteredData = applyComplementaryFilter(ax, ay, az, _currentGyro ?: Triple(0.0f, 0.0f, 0.0f))
+
+            // Update UI or perform further processing with the filtered gyro data
+            _currentLinAccUI.value = filteredData
         }
+
         //if the acceleration changes
         if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
-            // linear acceleration data:
-            val ax = event.values[0]
-            val ay = event.values[1]
-            val az = event.values[2]
 
-            // compute angle of elevation
+            // compute angle of elevation (for algorithm 1)
             val angle = computeAngleOfElevation(ax, ay, az)
 
             // Update UI or perform further processing with the angle
