@@ -131,7 +131,6 @@ sealed class CombinedSensorData {
     data class GyroData(val gyro: Triple<Float, Float, Float>?) : CombinedSensorData()
     data class HrData(val hr: Int?) : CombinedSensorData()
     data class AccelerometerData(val acc: Triple<Float, Float, Float>?, val angle: Float?) : CombinedSensorData()
-    data class AngleOfElevationData(val angle: Float?) : CombinedSensorData()
 }
 
 

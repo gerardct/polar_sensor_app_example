@@ -223,6 +223,7 @@ class AndroidPolarController(
         return filteredAngle
     }
 
+
     override fun onSensorChanged(event: SensorEvent) {
         // If the acceleration changes
         if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
@@ -235,12 +236,14 @@ class AndroidPolarController(
             val angle = computeAngleOfElevation(ax, ay, az)
 
             // Update UI or perform further processing with the angle
-            _currentAcceleration.value = Triple(ax, ay, az)
+            val accelerationTriple = Triple(ax, ay, az)
+            _currentAcceleration.update { accelerationTriple }
 
             // Update angle of elevation
-            _currentAngleOfElevation.value = angle
+            _currentAngleOfElevation.update { angle }
         }
     }
+
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
         // Not used in this example
     }

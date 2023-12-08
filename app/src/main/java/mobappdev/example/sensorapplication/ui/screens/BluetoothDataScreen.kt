@@ -58,7 +58,7 @@ fun BluetoothDataScreen(
             } else {
                 // Adjust how you want to display the accelerometer data
                 val accString = String.format("%.1f, %.1f, %.1f", accData.first, accData.second, accData.third)
-                val angleString = combinedSensorData.angle?.toString() ?: "-"
+                val angleString = combinedSensorData.angle?.toString()
                 "$accString\nAngle: $angleString"
             }
         }
@@ -79,7 +79,7 @@ fun BluetoothDataScreen(
         ) {
             Text(
                 text = if(state.measuring) value else "-",
-                fontSize = if (value.length < 3) 128.sp else 54.sp,
+                fontSize = if (value.length < 3) 128.sp else 40.sp,
                 color = Color.Black,
             )
         }
