@@ -20,6 +20,9 @@ interface PolarController {
     val accelerationList: StateFlow<List<Triple<Float, Float, Float>?>>
     val currentAngleOfElevation: StateFlow<Float?>
 
+    val currentGyro: StateFlow<Triple<Float, Float, Float>?>
+    val gyroList: StateFlow<List<Triple<Float, Float, Float>?>>
+
     val connected: StateFlow<Boolean>
     val measuring: StateFlow<Boolean>
 
@@ -31,4 +34,6 @@ interface PolarController {
 
     fun startAccStreaming(deviceId: String)
     fun stopAccStreaming()
+    fun startGyroStreaming(deviceId: String)
+    fun stopGyroStreaming()
 }

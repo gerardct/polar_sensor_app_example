@@ -10,9 +10,6 @@ package mobappdev.example.sensorapplication.data
  */
 
 import android.content.Context
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
 import android.util.Log
 import com.polar.sdk.api.PolarBleApi
 import com.polar.sdk.api.PolarBleApiCallback
@@ -20,6 +17,7 @@ import com.polar.sdk.api.PolarBleApiDefaultImpl
 import com.polar.sdk.api.errors.PolarInvalidArgument
 import com.polar.sdk.api.model.PolarAccelerometerData
 import com.polar.sdk.api.model.PolarDeviceInfo
+import com.polar.sdk.api.model.PolarGyroData
 import com.polar.sdk.api.model.PolarHrData
 import com.polar.sdk.api.model.PolarSensorSetting
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -35,7 +33,7 @@ import kotlin.math.sqrt
 
 class AndroidPolarController(
     private val context: Context,
-) : PolarController, SensorEventListener {
+) : PolarController {
 
     private val api: PolarBleApi by lazy {
         // Notice all features are enabled
@@ -85,6 +83,14 @@ class AndroidPolarController(
     private val _currentAngleOfElevation = MutableStateFlow<Float?>(null)
     override val currentAngleOfElevation: StateFlow<Float?>
         get() = _currentAngleOfElevation.asStateFlow()
+
+    private val _currentGyro = MutableStateFlow<Triple<Float, Float, Float>?>(null)
+    override val currentGyro: StateFlow<Triple<Float, Float, Float>?>
+        get() = _currentGyro.asStateFlow()
+
+    private val _gyroList = MutableStateFlow<List<Triple<Float, Float, Float>?>>(emptyList())
+    override val gyroList: StateFlow<List<Triple<Float, Float, Float>?>>
+        get() = _gyroList.asStateFlow()
 
     init {
         api.setPolarFilter(false) //if true, only Polar devices are looked for
@@ -166,88 +172,169 @@ class AndroidPolarController(
         hrDisposable?.dispose()
         _currentHR.update { null }
     }
+    // Method to start streaming the accelerometer data
+    override fun startAccStreaming(deviceId: String) {
+        if (accDisposable?.isDisposed == false) {
+            Log.d(TAG, "Already streaming")
+            return
+        }
 
+        _measuring.update { true }
+
+        val sensorSettings = mapOf(
+            PolarSensorSetting.SettingType.CHANNELS to 3,
+            PolarSensorSetting.SettingType.RANGE to 8,
+            PolarSensorSetting.SettingType.RESOLUTION to 16,
+            PolarSensorSetting.SettingType.SAMPLE_RATE to 52
+        )
+        val polarSensorSettings = PolarSensorSetting(sensorSettings)
+
+        accDisposable = api.startAccStreaming(deviceId, polarSensorSettings)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { handleAccData(it) },
+                { handleError(it) },
+                { handleComplete() }
+            )
+    }
+
+    // Handle accelerometer data
+    private fun handleAccData(accData: PolarAccelerometerData) {
+        for (sample in accData.samples) {
+            val accelerationTriple = Triple(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
+            _currentAcceleration.update { accelerationTriple }
+
+            val angle = computeAngleOfElevation(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
+            _currentAngleOfElevation.update { angle }
+        }
+    }
+
+    // Handle errors in the stream
+    private fun handleError(error: Throwable) {
+        Log.e(TAG, "Acceleration stream failed.\nReason: $error")
+    }
+
+    // Handle completion of the stream
+    private fun handleComplete() {
+        Log.d(TAG, "Acceleration stream complete")
+    }
+
+    // Method to stop streaming the accelerometer data
     override fun stopAccStreaming() {
         _measuring.update { false }
         accDisposable?.dispose()
         _currentAcceleration.update { null }
     }
 
+
     // ALGORITHM 1: compute angle of elevation
     private var lastFilteredAngle: Float = 0.0f
-    private val alpha: Float = 0.2f // for the filter
+    private val alpha: Float = 0.4f // for the filter
 
-    private fun computeAngleOfElevation(ax: Float, ay: Float, az: Float): Float {
-        // Calculate the angle
-        val angle = atan2(az.toDouble(), sqrt(ax * ax + ay * ay).toDouble()).toFloat()
+    fun computeAngleOfElevation(ax: Float, ay: Float, az: Float): Float {
+        val projectedMagnitude = sqrt(ax * ax + ay * ay)
 
-        // EWMA Filter
-        val filteredAngle = alpha * angle + (1 - alpha) * lastFilteredAngle
-        // Update the previous filtered angle for the next iteration
+        if (projectedMagnitude < 0.000001f) {
+            return 0.0f
+        }
+
+        val elevationAngle = atan2(az.toDouble(), projectedMagnitude.toDouble()).toFloat()
+
+        val filteredAngle = alpha * elevationAngle + (1 - alpha) * lastFilteredAngle
         lastFilteredAngle = filteredAngle
-        return filteredAngle
+
+        val elevationAngleInDegrees = Math.toDegrees(filteredAngle.toDouble()).toFloat()
+
+        return elevationAngleInDegrees
     }
 
-    override fun startAccStreaming(deviceId: String) {
-        val isDisposed = accDisposable?.isDisposed ?: true
-        if (isDisposed) {
-            _measuring.update { true }
+    // ALGORITHM 2: Complimentary filter combining linear acceleration and gyroscope
+    private val alpha2: Float = 0.98f // filter factor
 
-            val sensorSettings = mapOf(
-                PolarSensorSetting.SettingType.CHANNELS to 3,
-                PolarSensorSetting.SettingType.RANGE to 8,
-                PolarSensorSetting.SettingType.RESOLUTION to 16,
-                PolarSensorSetting.SettingType.SAMPLE_RATE to 52
-            )
+    private fun applyComplementaryFilter(ax: Float, ay: Float, az: Float, gyro: Triple<Float, Float, Float>): Triple<Float, Float, Float> {
+        // equation for complimentary filter:
+        val filteredAccelerationX = alpha2 * ax + (1 - alpha2) * gyro.first
+        val filteredAccelerationY = alpha2 * ay + (1 - alpha2) * gyro.second
+        val filteredAccelerationZ = alpha2 * az + (1 - alpha2) * gyro.third
 
-            val polarSensorSettings = PolarSensorSetting(sensorSettings)
+        return Triple(filteredAccelerationX, filteredAccelerationY, filteredAccelerationZ)
+    }
 
-            accDisposable = api.startAccStreaming(deviceId, polarSensorSettings)
+    private var gyroDisposable: Disposable? = null
+    override fun startGyroStreaming(deviceId: String) {
+        if (gyroDisposable?.isDisposed == false) {
+            Log.d(TAG, "Already streaming")
+            return
+        }
+
+        _measuring.update { true }
+
+        // Configure gyro sensor settings as needed
+        val gyroSensorSettings = mapOf(
+            PolarSensorSetting.SettingType.CHANNELS to 3, // Number of gyro channels
+            PolarSensorSetting.SettingType.RANGE to 2000, // Gyro range (e.g., ±2000 degrees/second)
+            PolarSensorSetting.SettingType.RESOLUTION to 16, // Resolution (bits)
+            PolarSensorSetting.SettingType.SAMPLE_RATE to 100 // Sample rate (e.g., 100 Hz)
+        )
+
+        val polarGyroSettings = PolarSensorSetting(gyroSensorSettings)
+
+        gyroDisposable = api.startGyroStreaming(deviceId, polarGyroSettings)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    { accData: PolarAccelerometerData ->
-                        for (sample in accData.samples) {
-                            val accelerationTriple = Triple(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
-                            _currentAcceleration.update { accelerationTriple }
-
-                            // Compute angle of elevation
-                            val angle = computeAngleOfElevation(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
-
-                            // Update angle of elevation
-                            _currentAngleOfElevation.update { angle }
-                        }
+                    { gyroData: PolarGyroData ->
+                        // Handle gyro data
+                        handleGyroData(gyroData)
                     },
                     { error: Throwable ->
-                        Log.e(TAG, "Acceleration stream failed.\nReason: $error")
+                        // Handle errors in gyro stream
+                        Log.e(TAG, "Gyro stream failed.\nReason $error")
                     },
-                    { Log.d(TAG, "Acceleration stream complete") }
+                    {
+                        // Handle completion of gyro stream
+                        Log.d(TAG, "Gyro stream complete")
+                    }
                 )
-        } else {
-            Log.d(TAG, "Already streaming")
-        }
     }
 
-    override fun onSensorChanged(event: SensorEvent) {
-        // If the acceleration changes
-        if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
-            // Linear acceleration data
-            val ax = event.values[0]
-            val ay = event.values[1]
-            val az = event.values[2]
-
-            // Compute angle of elevation
-            val angle = computeAngleOfElevation(ax, ay, az)
-
-            // Update UI or perform further processing with the angle
-            val accelerationTriple = Triple(ax, ay, az)
-            _currentAcceleration.update { accelerationTriple }
-
-            // Update angle of elevation
-            _currentAngleOfElevation.update { angle }
-        }
+    override fun stopGyroStreaming() {
+        _measuring.update { false }
+        gyroDisposable?.dispose()
+        // Perform any additional cleanup if necessary
     }
 
-    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
-        // Not used in this example
+    private fun handleGyroData(gyroData: PolarGyroData) {
+        for (sample in gyroData.samples) {
+            val gyroTriple = Triple(sample.x, sample.y, sample.z)
+            _currentGyro.update { gyroTriple }
+
+            // Optionally, add the gyro data to a list
+            _gyroList.update { gyroList ->
+                gyroList + gyroTriple
+            }
+
+            // Calculate angle of elevation using linear acceleration only
+            val angleUsingLinearAcc = computeAngleOfElevation(
+                _currentAcceleration.value?.first ?: 0f,
+                _currentAcceleration.value?.second ?: 0f,
+                _currentAcceleration.value?.third ?: 0f
+            )
+
+            // Calculate angle of elevation using linear acceleration and gyroscope data
+            val complementaryAngle = applyComplementaryFilter(
+                _currentAcceleration.value?.first ?: 0f,
+                _currentAcceleration.value?.second ?: 0f,
+                _currentAcceleration.value?.third ?: 0f,
+                gyroTriple
+            )
+
+            // Update UI or perform other operations with angles
+            // For example, update UI text views with angle values
+            // angleUsingLinearAccTextView.text = "Angle using Linear Acc: $angleUsingLinearAcc"
+            // complementaryAngleTextView.text = "Complementary Angle: $complementaryAngle"
+
+            // Optionally, pass the angles to other functions or components as needed
+            // addComplementaryFunction(angleUsingLinearAcc, complementaryAngle)
+        }
     }
 }
