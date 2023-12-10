@@ -38,8 +38,8 @@ class DataVM @Inject constructor(
     private val ang1dataFlowPol = polarController.angleFromAlg1
     private val ang2dataFlowPol = polarController.angleFromAlg2
 
-    val angle1Flow = internalSensorController.currentAngle1
-    val angle2Flow = internalSensorController.currentAngle2
+    //val angle1Flow = internalSensorController.currentAngle1
+    //val angle2Flow = internalSensorController.currentAngle2
 
 
     // for the internal sensor:
