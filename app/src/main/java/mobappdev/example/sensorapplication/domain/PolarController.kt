@@ -9,7 +9,6 @@ package mobappdev.example.sensorapplication.domain
  */
 
 
-import com.polar.sdk.api.model.PolarAccelerometerData
 import kotlinx.coroutines.flow.StateFlow
 
 interface PolarController {
@@ -18,10 +17,14 @@ interface PolarController {
 
     val currentAcceleration: StateFlow<Triple<Float, Float, Float>?>
     val accelerationList: StateFlow<List<Triple<Float, Float, Float>?>>
-    val currentAngleOfElevation: StateFlow<Float?>
 
     val currentGyro: StateFlow<Triple<Float, Float, Float>?>
     val gyroList: StateFlow<List<Triple<Float, Float, Float>?>>
+
+    val angleFromAlg1: StateFlow<Float?>
+    val angleFromAlg2: StateFlow<Float?>
+    val angleFromAlg1list:StateFlow<List<Float>>
+    val angleFromAlg2list:StateFlow<List<Float>>
 
     val connected: StateFlow<Boolean>
     val measuring: StateFlow<Boolean>
@@ -29,11 +32,12 @@ interface PolarController {
     fun connectToDevice(deviceId: String)
     fun disconnectFromDevice(deviceId: String)
 
+    fun startCombinedStreaming(deviceId: String)
+    fun stopCombinedStreaming()
+    fun calculateAndApplyAngles()
+
+
+
     fun startHrStreaming(deviceId: String)
     fun stopHrStreaming()
-
-    fun startAccStreaming(deviceId: String)
-    fun stopAccStreaming()
-    fun startGyroStreaming(deviceId: String)
-    fun stopGyroStreaming()
 }
