@@ -298,17 +298,21 @@ class AndroidPolarController(
     }
 
 
-    // ALGORITHM 1: compute angle of elevation
-    private var lastFilteredAngle: Float = 0.0f
-    private val alpha: Float = 0.4f // for the filter
-    private fun computeAngleOfElevation(ax: Float, ay: Float, az: Float): Float {
-        val projectedMagnitude = sqrt(ax * ax + ay * ay)
+    private var lastFilteredAngle: Float = 0.0f // Start with 0 degrees when parallel to the ground
+    private val alpha: Float = 0.4f // Filter factor for the first function
+
+    private fun computeAngleOfElevation(
+        rawAccelerationX: Float,
+        rawAccelerationY: Float,
+        rawAccelerationZ: Float
+    ): Float {
+        val projectedMagnitude = sqrt(rawAccelerationX * rawAccelerationX + rawAccelerationY * rawAccelerationY)
 
         if (projectedMagnitude < 0.000001f) {
             return 0.0f
         }
 
-        val elevationAngle = atan2(az.toDouble(), projectedMagnitude.toDouble()).toFloat()
+        val elevationAngle = atan2(rawAccelerationZ.toDouble(), projectedMagnitude.toDouble()).toFloat()
 
         val filteredAngle = alpha * elevationAngle + (1 - alpha) * lastFilteredAngle
         lastFilteredAngle = filteredAngle
@@ -316,8 +320,8 @@ class AndroidPolarController(
         return Math.toDegrees(filteredAngle.toDouble()).toFloat()
     }
 
-    // Constants for the filter
-    private val alpha2: Float = 0.9f // filter factor
+    private val alpha2: Float = 0.9f // Filter factor for the second function
+
     private fun calculateElevationAngle(
         rawAccelerationX: Float,
         rawAccelerationY: Float,
@@ -339,9 +343,15 @@ class AndroidPolarController(
         )
 
         // Calculate the pitch angle (elevation angle) using trigonometric functions
-        val pitchRadians = atan2(filteredAccelerationY, magnitude)
+        val pitchRadians = atan2(filteredAccelerationZ, magnitude)
 
-        return Math.toDegrees(pitchRadians.toDouble()).toFloat()
+        // Adjust the angle based on orientation (perpendicular: 90 degrees, parallel: 0 degrees)
+        val adjustedAngle = Math.toDegrees(pitchRadians.toDouble()).toFloat()
+
+        // If sensor is parallel to the ground, return 0 degrees; if perpendicular, return 90 degrees
+        return when {
+            adjustedAngle < 45 -> 90 - adjustedAngle * 2 // Adjust for 0-90 degrees range
+            else -> 90 - adjustedAngle // Adjust for 90-180 degrees range
+        }
     }
-
 }
