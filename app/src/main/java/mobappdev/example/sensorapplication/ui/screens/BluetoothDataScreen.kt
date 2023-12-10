@@ -32,9 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobappdev.example.sensorapplication.ui.viewmodels.CombinedSensorData
+import mobappdev.example.sensorapplication.ui.viewmodels.CombinedPolarSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 
 @Composable
 fun BluetoothDataScreen(
@@ -43,18 +42,32 @@ fun BluetoothDataScreen(
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
 
+    val angle1State = vm.angle1Flow.collectAsState()
+    val angle2State = vm.angle2Flow.collectAsState()
 
+    // Extract the values from the state objects
+    //val angle1: Float? = angle1State.value
+    //val angle2: Float? = angle2State.value
 
     val value: String = when {
         state.connected -> {
             // Connected case
             // Your existing logic based on CombinedSensorData
-            when (val combinedSensorData = vm.combinedDataFlow.collectAsState().value) {
-                // ... (existing code remains the same)
+            when (val combinedPolarSensorData = vm.combinedPolarDataFlow.collectAsState().value) {
+                is CombinedPolarSensorData.AngleData -> {
+                    val angle1pol = combinedPolarSensorData.angle1
+                    val angle2pol = combinedPolarSensorData.angle2
+                    if (angle1pol == null || angle2pol == null) {
+                        "-"
+                    } else {
+                        String.format("%.1f,%.1f", angle1pol, angle2pol)
+                    }
+                }
                 else -> "-"
             }
         }
-        else -> {
+
+    else -> {
             // Not connected case
             // Define the string when not connected
             when (val combinedSensorData = vm.combinedDataFlow.collectAsState().value) {
@@ -144,8 +157,8 @@ fun BluetoothDataScreen(
                 Text(text = "Start\nHr Stream")
             }
             Button(
-                onClick = vm::StartPolar,
-                enabled = (!state.measuring),
+                onClick = vm::startPolar,
+                enabled = (state.connected && !state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
@@ -173,7 +186,7 @@ fun BluetoothDataScreen(
         }
 
 
-        // new row for starting the internal sensor
+        // new row for starting /stopping the internal sensor
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround,
@@ -193,11 +206,6 @@ fun BluetoothDataScreen(
             }
 
         }
-
-
-
-
-
 
     }
 }
