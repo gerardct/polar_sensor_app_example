@@ -67,9 +67,7 @@ class DataVM @Inject constructor(
         linAccDataFlow,
         hrDataFlow,
         accDataFlow,
-        ang2dataFlowPol
-        //angle1Flow, // angle from algorithm 1
-        //angle2Flow // angle from algorithm 2
+        ang1dataFlowPol
     ) { gyro, linAcc, hr, acc, ang ->
         when {
             hr != null -> CombinedSensorData.HrData(hr)
