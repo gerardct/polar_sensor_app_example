@@ -50,30 +50,42 @@ fun BluetoothDataScreen(
     val angle1: Float? = angle1State.value
     val angle2: Float? = angle2State.value
 
-    val value: String = when (val combinedSensorData = vm.combinedDataFlow.collectAsState().value) {
-        is CombinedSensorData.GyroData -> {
-            val triple = combinedSensorData.gyro
-            if (triple == null) {
-                "-"
-            } else {
-                String.format("%.1f, %.1f, %.1f", triple.first, triple.second, triple.third)
+    val value: String = when {
+        state.connected -> {
+            // Connected case
+            // Your existing logic based on CombinedSensorData
+            when (val combinedSensorData = vm.combinedDataFlow.collectAsState().value) {
+                // ... (existing code remains the same)
+                else -> "-"
             }
         }
-        is CombinedSensorData.HrData -> combinedSensorData.hr.toString()
-        is CombinedSensorData.AccelerometerData -> {
-            val accData = combinedSensorData.acc
-            if (accData == null) {
-                "-"
-            } else {
-                // Adjust how you want to display the accelerometer data
-                val accString = String.format("%.1f, %.1f, %.1f", accData.first, accData.second, accData.third)
-                val angleString = combinedSensorData.angle?.toString()
-                "$accString\nAngle: $angleString"
+        else -> {
+            // Not connected case
+            // Define the string when not connected
+            when (val combinedSensorData = vm.combinedDataFlow.collectAsState().value) {
+                is CombinedSensorData.GyroData -> {
+                    val triple = combinedSensorData.gyro
+                    if (triple == null) {
+                        "-"
+                    } else {
+                        String.format("%.1f, %.1f, %.1f", triple.first, triple.second, triple.third)
+                    }
+                }
+                is CombinedSensorData.HrData -> combinedSensorData.hr.toString()
+                is CombinedSensorData.AccelerometerData -> {
+                    val accData = combinedSensorData.acc
+                    if (accData == null) {
+                        "-"
+                    } else {
+                        val accString = String.format("%.1f, %.1f, %.1f", accData.first, accData.second, accData.third)
+                        val angleString = combinedSensorData.ang?.toString()
+                        "$accString\nAngle: $angleString"
+                    }
+                }
+                else -> "-"
             }
         }
-        else -> "-"
     }
-
 
 
     Column(
@@ -137,14 +149,14 @@ fun BluetoothDataScreen(
                 Text(text = "Start\nHr Stream")
             }
             Button(
-                onClick = vm::startAcc,
+                onClick = vm::StartPolar,
                 enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Start\nGyro Stream")
+                Text(text = "Start\nPolar sensor Stream")
             }
         }
 

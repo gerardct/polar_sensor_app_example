@@ -34,7 +34,9 @@ class DataVM @Inject constructor(
 
     private val hrDataFlow = polarController.currentHR
     private val accDataFlow = polarController.currentAcceleration
-    private val angleDataFlow = polarController.currentAngleOfElevation
+    private val gyroDataFlowPolar = polarController.currentGyro
+    private val ang1dataFlowPol = polarController.angleFromAlg1
+    private val ang2dataFlowPol = polarController.angleFromAlg2
 
     val angle1Flow = internalSensorController.currentAngle1
     val angle2Flow = internalSensorController.currentAngle2
@@ -47,19 +49,31 @@ class DataVM @Inject constructor(
 
        // }
     //}
+//Prova separant Polar i internal
 
+    val combinedPolarDataFlow = combine(
+        polarController.angleFromAlg1,
+        polarController.angleFromAlg2
+    ) { angle1, angle2 ->
+        CombinedPolarSensorData.AngleData(angle1, angle2)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    sealed class CombinedPolarSensorData {
+        data class AngleData(val angle1: Float?, val angle2: Float?) : CombinedPolarSensorData()
+    }
+
+//
 
 
     val combinedDataFlow = combine(
         gyroDataFlow,
+        linAccDataFlow,
         hrDataFlow,
         accDataFlow,
-        angleDataFlow,
-        linAccDataFlow,
+        ang1dataFlowPol
         //angle1Flow, // angle from algorithm 1
         //angle2Flow // angle from algorithm 2
-    ) { gyro, hr, acc, ang, linAcc ->
+    ) { gyro, linAcc, hr, acc, ang ->
         when {
             hr != null -> CombinedSensorData.HrData(hr)
             gyro != null -> CombinedSensorData.GyroData(gyro)
@@ -71,18 +85,19 @@ class DataVM @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _state = MutableStateFlow(DataUiState())
+
     val state = combine(
-        polarController.hrList,
-        polarController.accelerationList,
+        polarController.angleFromAlg1list,
+        polarController.angleFromAlg2list,
         polarController.connected,
-        _state
-    ) { hrList, accelerationList, connected, state ->
-        state.copy(
-            hrList = hrList,
-            accelerationList = accelerationList,
+    ) { angleFromAlg1List, angleFromAlg2List, connected ->
+        _state.value.copy(
+            angleFromAlg1List = angleFromAlg1List,
+            angleFromAlg2List = angleFromAlg2List,
             connected = connected,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
+
 
     private var streamType: StreamType? = null
 
@@ -110,6 +125,11 @@ class DataVM @Inject constructor(
         streamType = StreamType.FOREIGN_HR
         _state.update { it.copy(measuring = true) }
     }
+    fun StartPolar(){
+        polarController.startCombinedStreaming(_deviceId.value)
+        streamType = StreamType.FOREIGN
+        _state.update { it.copy(measuring = true) }
+    }
 
     fun startGyro() {
         internalSensorController.startGyroStream()
@@ -118,18 +138,12 @@ class DataVM @Inject constructor(
         _state.update { it.copy(measuring = true) }
     }
 
-    fun startAcc() {
-        polarController.startAccStreaming(_deviceId.value)
-        streamType = StreamType.FOREIGN_ACC
-        _state.update { it.copy(measuring = true) }
-    }
-
 
     fun stopDataStream() {
         when (streamType) {
             StreamType.LOCAL_GYRO -> internalSensorController.stopGyroStream()
             StreamType.FOREIGN_HR -> polarController.stopHrStreaming()
-            StreamType.FOREIGN_ACC -> polarController.stopAccStreaming()
+            StreamType.FOREIGN -> polarController.stopCombinedStreaming()
 
             else -> {} // Do nothing
         }
@@ -174,21 +188,22 @@ class DataVM @Inject constructor(
 data class DataUiState(
     val hrList: List<Int> = emptyList(),
     val accelerationList: List<Triple<Float, Float, Float>?> = emptyList(), // Define the type of data in the list
+    val angleFromAlg1List: List<Float> = emptyList(),
+    val angleFromAlg2List: List<Float> = emptyList(),
     val connected: Boolean = false,
     val measuring: Boolean = false
 )
 
 
 enum class StreamType {
-    LOCAL_GYRO, LOCAL_ACC, FOREIGN_HR, FOREIGN_ACC
+    LOCAL_GYRO, LOCAL_ACC, FOREIGN_HR, FOREIGN_ACC, FOREIGN
 }
 
 sealed class CombinedSensorData {
     data class GyroData(val gyro: Triple<Float, Float, Float>?) : CombinedSensorData()
     data class HrData(val hr: Int?) : CombinedSensorData()
-    data class AccelerometerData(val acc: Triple<Float, Float, Float>?, val angle: Float?) : CombinedSensorData()
+    data class AccelerometerData(val acc: Triple<Float, Float, Float>?,val ang: Float?) : CombinedSensorData()
     data class InternalSensorData(val linAcc: Triple<Float, Float, Float>?) : CombinedSensorData()//, val angle1: Float?, val angle2: Float?) : CombinedSensorData()
-
 }
 
 
