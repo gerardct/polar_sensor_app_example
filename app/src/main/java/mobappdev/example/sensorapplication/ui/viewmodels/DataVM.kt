@@ -53,14 +53,11 @@ class DataVM @Inject constructor(
 
     val combinedPolarDataFlow = combine(
         polarController.angleFromAlg1,
-        polarController.angleFromAlg2
+        polarController.angleFromAlg2,
     ) { angle1, angle2 ->
         CombinedPolarSensorData.AngleData(angle1, angle2)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    sealed class CombinedPolarSensorData {
-        data class AngleData(val angle1: Float?, val angle2: Float?) : CombinedPolarSensorData()
-    }
 
 //
 
@@ -90,8 +87,9 @@ class DataVM @Inject constructor(
         polarController.angleFromAlg1list,
         polarController.angleFromAlg2list,
         polarController.connected,
-    ) { angleFromAlg1List, angleFromAlg2List, connected ->
-        _state.value.copy(
+        _state
+    ) { angleFromAlg1List, angleFromAlg2List, connected, state ->
+        state.copy(
             angleFromAlg1List = angleFromAlg1List,
             angleFromAlg2List = angleFromAlg2List,
             connected = connected,
@@ -125,7 +123,7 @@ class DataVM @Inject constructor(
         streamType = StreamType.FOREIGN_HR
         _state.update { it.copy(measuring = true) }
     }
-    fun StartPolar(){
+    fun startPolar(){
         polarController.startCombinedStreaming(_deviceId.value)
         streamType = StreamType.FOREIGN
         _state.update { it.copy(measuring = true) }
@@ -205,5 +203,9 @@ sealed class CombinedSensorData {
     data class AccelerometerData(val acc: Triple<Float, Float, Float>?,val ang: Float?) : CombinedSensorData()
     data class InternalSensorData(val linAcc: Triple<Float, Float, Float>?) : CombinedSensorData()//, val angle1: Float?, val angle2: Float?) : CombinedSensorData()
 }
+sealed class CombinedPolarSensorData {
+    data class AngleData(val angle1: Float?, val angle2: Float?) : CombinedPolarSensorData()
+}
+
 
 
