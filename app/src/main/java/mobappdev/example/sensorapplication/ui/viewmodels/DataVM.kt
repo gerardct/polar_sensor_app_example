@@ -116,6 +116,7 @@ class DataVM @Inject constructor(
             intAngleFromAlg1List = intAngleFromAlg1List,
             intAngleFromAlg2List = intAngleFromAlg2List,
         )
+
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state2.value)
 
 

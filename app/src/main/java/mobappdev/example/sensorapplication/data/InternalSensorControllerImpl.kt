@@ -172,6 +172,7 @@ class InternalSensorControllerImpl(
         gyroX: Float,
         gyroY: Float,
         gyroZ: Float
+
     ): Float {
         // equation for complimentary filter:
         val filteredAccelerationX = alpha2 * ax + (1 - alpha2) * gyroX

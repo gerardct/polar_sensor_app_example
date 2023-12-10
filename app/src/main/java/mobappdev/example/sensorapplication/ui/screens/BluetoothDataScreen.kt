@@ -42,8 +42,6 @@ fun BluetoothDataScreen(
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
 
-    val angle1State = vm.angle1Flow.collectAsState()
-    val angle2State = vm.angle2Flow.collectAsState()
 
     // Extract the values from the state objects
     //val angle1: Float? = angle1State.value

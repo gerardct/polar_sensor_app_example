@@ -36,7 +36,5 @@ interface InternalSensorController {
 
     fun applyAngleOfElevation()
 
-    // function for the callback:
-    //fun setInternalSensorDataCallback(callback: (Triple<Float, Float, Float>?) -> Unit)
 
 }
