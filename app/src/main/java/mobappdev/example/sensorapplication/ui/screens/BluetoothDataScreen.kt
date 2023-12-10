@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobappdev.example.sensorapplication.ui.viewmodels.CombinedSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 
 @Composable
 fun BluetoothDataScreen(
@@ -40,6 +42,13 @@ fun BluetoothDataScreen(
 ) {
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
+
+    val angle1State = vm.angle1Flow.collectAsState()
+    val angle2State = vm.angle2Flow.collectAsState()
+
+    // Extract the values from the state objects
+    val angle1: Float? = angle1State.value
+    val angle2: Float? = angle2State.value
 
     val value: String = when (val combinedSensorData = vm.combinedDataFlow.collectAsState().value) {
         is CombinedSensorData.GyroData -> {
@@ -64,6 +73,8 @@ fun BluetoothDataScreen(
         }
         else -> "-"
     }
+
+
 
     Column(
         modifier = Modifier
@@ -153,5 +164,33 @@ fun BluetoothDataScreen(
                 Text(text = "Stop\nstream")
             }
         }
+
+
+        // new row for starting /stopping the internal sensor
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier.fillMaxWidth()
+        ){
+            Button(
+                onClick = {
+                    vm.startImuStream()
+                },
+                enabled = (!state.measuring),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = Color.Gray
+                )
+            ) {
+                Text(text = "Start\nInternal Stream")
+            }
+
+        }
+
+
+
+
+
+
     }
 }

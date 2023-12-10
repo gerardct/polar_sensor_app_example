@@ -30,20 +30,42 @@ class DataVM @Inject constructor(
 ): ViewModel() {
 
     private val gyroDataFlow = internalSensorController.currentGyroUI
+    private val linAccDataFlow = internalSensorController.currentLinAccUI
+
     private val hrDataFlow = polarController.currentHR
     private val accDataFlow = polarController.currentAcceleration
     private val angleDataFlow = polarController.currentAngleOfElevation
+
+    val angle1Flow = internalSensorController.currentAngle1
+    val angle2Flow = internalSensorController.currentAngle2
+
+
+    // for the internal sensor:
+    //init {
+        // Set the callback for the internal sensor controller
+       // internalSensorController.setInternalSensorDataCallback { tripleData ->
+
+       // }
+    //}
+
+
+
 
     val combinedDataFlow = combine(
         gyroDataFlow,
         hrDataFlow,
         accDataFlow,
-        angleDataFlow
-    ) { gyro, hr, acc, ang ->
+        angleDataFlow,
+        linAccDataFlow,
+        //angle1Flow, // angle from algorithm 1
+        //angle2Flow // angle from algorithm 2
+    ) { gyro, hr, acc, ang, linAcc ->
         when {
             hr != null -> CombinedSensorData.HrData(hr)
             gyro != null -> CombinedSensorData.GyroData(gyro)
             acc != null -> CombinedSensorData.AccelerometerData(acc,ang)
+            linAcc != null -> CombinedSensorData.InternalSensorData(linAcc)
+
             else -> null
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -108,10 +130,44 @@ class DataVM @Inject constructor(
             StreamType.LOCAL_GYRO -> internalSensorController.stopGyroStream()
             StreamType.FOREIGN_HR -> polarController.stopHrStreaming()
             StreamType.FOREIGN_ACC -> polarController.stopAccStreaming()
+
             else -> {} // Do nothing
         }
         _state.update { it.copy(measuring = false) }
     }
+
+
+    fun startImuStream() {
+        internalSensorController.startImuStream()
+        streamType = StreamType.LOCAL_ACC
+        _state.update { it.copy(measuring = true) }
+
+    }
+
+    fun stopImuStream() {
+        when (streamType) {
+            StreamType.LOCAL_ACC -> internalSensorController.stopImuStream()
+            else -> {} // Do nothing
+        }
+        _state.update { it.copy(measuring = false) }
+    }
+
+
+
+
+    // this is for the recording of data:
+    fun startRecording() {
+        // start recording logic
+    }
+
+    fun stopRecording() {
+        // stop recording logic
+    }
+
+    fun exportDataToCSV() {
+        // logic to export and get the data to CSV format
+    }
+
 
 }
 
@@ -131,6 +187,8 @@ sealed class CombinedSensorData {
     data class GyroData(val gyro: Triple<Float, Float, Float>?) : CombinedSensorData()
     data class HrData(val hr: Int?) : CombinedSensorData()
     data class AccelerometerData(val acc: Triple<Float, Float, Float>?, val angle: Float?) : CombinedSensorData()
+    data class InternalSensorData(val linAcc: Triple<Float, Float, Float>?) : CombinedSensorData()//, val angle1: Float?, val angle2: Float?) : CombinedSensorData()
+
 }
 
 

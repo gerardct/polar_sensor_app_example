@@ -249,7 +249,7 @@ class AndroidPolarController(
     }
 
     // ALGORITHM 2: Complimentary filter combining linear acceleration and gyroscope
-    private val alpha2: Float = 0.98f // filter factor
+    private val alpha2: Float = 0.9f // filter factor
 
     private fun applyComplementaryFilter(ax: Float, ay: Float, az: Float, gyro: Triple<Float, Float, Float>): Triple<Float, Float, Float> {
         // equation for complimentary filter:
