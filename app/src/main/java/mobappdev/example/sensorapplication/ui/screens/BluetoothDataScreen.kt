@@ -50,7 +50,7 @@ fun BluetoothDataScreen(
     //val angle2: Float? = angle2State.value
 
     val value: String = when {
-        state.connected -> {
+        state.connected && state.measuring -> {
             // Connected case
             // Your existing logic based on CombinedSensorData
             when (val combinedPolarSensorData = vm.combinedPolarDataFlow.collectAsState().value) {
@@ -154,7 +154,7 @@ fun BluetoothDataScreen(
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Start\nHr Stream")
+                Text(text = "Start Hr Stream")
             }
             Button(
                 onClick = vm::startPolar,
@@ -164,7 +164,7 @@ fun BluetoothDataScreen(
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Start\nPolar sensor Stream")
+                Text(text = "Start Polar sensor Stream")
             }
         }
 

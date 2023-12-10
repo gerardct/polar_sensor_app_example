@@ -67,7 +67,7 @@ class DataVM @Inject constructor(
         linAccDataFlow,
         hrDataFlow,
         accDataFlow,
-        ang1dataFlowPol
+        ang2dataFlowPol
         //angle1Flow, // angle from algorithm 1
         //angle2Flow // angle from algorithm 2
     ) { gyro, linAcc, hr, acc, ang ->

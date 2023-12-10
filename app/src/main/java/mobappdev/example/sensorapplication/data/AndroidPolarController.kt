@@ -192,6 +192,7 @@ class AndroidPolarController(
         for (sample in accData.samples) {
             val accelerationTriple = Triple(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
             _currentAcceleration.update { accelerationTriple }
+            calculateAndApplyAngles() // Call here to calculate angles after receiving accelerometer data
         }
     }
 
@@ -199,8 +200,10 @@ class AndroidPolarController(
         for (sample in gyroData.samples) {
             val gyroTriple = Triple(sample.x, sample.y, sample.z)
             _currentGyro.update { gyroTriple }
+            calculateAndApplyAngles() // Call here to calculate angles after receiving gyroscope data
         }
     }
+
     override fun startCombinedStreaming(deviceId: String) {
         if (accDisposable?.isDisposed == false || gyroDisposable?.isDisposed == false) {
             Log.d(TAG, "Already streaming")
@@ -231,7 +234,6 @@ class AndroidPolarController(
             .subscribe(
                 { accData ->
                     handleAccData(accData)
-                    calculateAndApplyAngles()
                 },
                 { error ->
                     Log.e(TAG, "Acceleration stream failed.\nReason: $error")
@@ -249,7 +251,6 @@ class AndroidPolarController(
             .subscribe(
                 { gyroData ->
                     handleGyroData(gyroData)
-                    calculateAndApplyAngles()
                 },
                 { error ->
                     Log.e(TAG, "Gyro stream failed.\nReason $error")
@@ -272,6 +273,8 @@ class AndroidPolarController(
                 acc.first, acc.second, acc.third,
                 gyro.first, gyro.second, gyro.third
             )
+            _angleFromAlg1.update { angleFromAlg1 }
+            _angleFromAlg2.update { angleFromAlg2 }
 
             _angleFromAlg1List.update { list -> list + angleFromAlg1 }
             _angleFromAlg2List.update { list -> list + angleFromAlg2 }
