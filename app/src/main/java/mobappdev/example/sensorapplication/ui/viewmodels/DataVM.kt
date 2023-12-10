@@ -31,6 +31,8 @@ class DataVM @Inject constructor(
 
     private val gyroDataFlow = internalSensorController.currentGyroUI
     private val linAccDataFlow = internalSensorController.currentLinAccUI
+    //private val ang1dataFlowInternal = internalSensorController.intAngleFromAlg1
+    //private val ang2dataFlowInternal = internalSensorController.intAngleFromAlg2
 
     private val hrDataFlow = polarController.currentHR
     private val accDataFlow = polarController.currentAcceleration
@@ -38,17 +40,12 @@ class DataVM @Inject constructor(
     private val ang1dataFlowPol = polarController.angleFromAlg1
     private val ang2dataFlowPol = polarController.angleFromAlg2
 
-    val angle1Flow = internalSensorController.currentAngle1
-    val angle2Flow = internalSensorController.currentAngle2
 
 
-    // for the internal sensor:
-    //init {
-        // Set the callback for the internal sensor controller
-       // internalSensorController.setInternalSensorDataCallback { tripleData ->
 
-       // }
-    //}
+
+
+
 //Prova separant Polar i internal
 
     val combinedPolarDataFlow = combine(
@@ -62,6 +59,20 @@ class DataVM @Inject constructor(
         data class AngleData(val angle1: Float?, val angle2: Float?) : CombinedPolarSensorData()
     }
 
+
+    // internal data flow
+    val internalDataFlow = combine(
+        internalSensorController.intAngleFromAlg1,
+        internalSensorController.intAngleFromAlg2
+    ) { intAngle1, intAngle2 ->
+        CombinedInternalData.InternalAngles(intAngle1, intAngle2)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    sealed class CombinedInternalData {
+        data class InternalAngles(val intAngle1: Float?, val intAngle2: Float?) : CombinedInternalData()
+    }
+
+
 //
 
 
@@ -71,8 +82,6 @@ class DataVM @Inject constructor(
         hrDataFlow,
         accDataFlow,
         ang1dataFlowPol
-        //angle1Flow, // angle from algorithm 1
-        //angle2Flow // angle from algorithm 2
     ) { gyro, linAcc, hr, acc, ang ->
         when {
             hr != null -> CombinedSensorData.HrData(hr)
@@ -86,6 +95,7 @@ class DataVM @Inject constructor(
 
     private val _state = MutableStateFlow(DataUiState())
 
+    // polar sensor angles
     val state = combine(
         polarController.angleFromAlg1list,
         polarController.angleFromAlg2list,
@@ -97,6 +107,18 @@ class DataVM @Inject constructor(
             connected = connected,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
+
+    // internal sensor angles:
+    private val _state2 = MutableStateFlow(DataUiState())
+    val state2 = combine(
+        internalSensorController.intAngleFromAlg1list,
+        internalSensorController.intAngleFromAlg2list,
+    ) { intAngleFromAlg1List, intAngleFromAlg2List ->
+        _state2.value.copy(
+            intAngleFromAlg1List = intAngleFromAlg1List,
+            intAngleFromAlg2List = intAngleFromAlg2List,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state2.value)
 
 
     private var streamType: StreamType? = null
@@ -144,6 +166,7 @@ class DataVM @Inject constructor(
             StreamType.LOCAL_GYRO -> internalSensorController.stopGyroStream()
             StreamType.FOREIGN_HR -> polarController.stopHrStreaming()
             StreamType.FOREIGN -> polarController.stopCombinedStreaming()
+            StreamType.LOCAL_ACC -> internalSensorController.stopImuStream()
 
             else -> {} // Do nothing
         }
@@ -191,7 +214,9 @@ data class DataUiState(
     val angleFromAlg1List: List<Float> = emptyList(),
     val angleFromAlg2List: List<Float> = emptyList(),
     val connected: Boolean = false,
-    val measuring: Boolean = false
+    val measuring: Boolean = false,
+    val intAngleFromAlg1List: List<Float> = emptyList(),
+    val intAngleFromAlg2List: List<Float> = emptyList(),
 )
 
 
@@ -203,7 +228,7 @@ sealed class CombinedSensorData {
     data class GyroData(val gyro: Triple<Float, Float, Float>?) : CombinedSensorData()
     data class HrData(val hr: Int?) : CombinedSensorData()
     data class AccelerometerData(val acc: Triple<Float, Float, Float>?,val ang: Float?) : CombinedSensorData()
-    data class InternalSensorData(val linAcc: Triple<Float, Float, Float>?) : CombinedSensorData()//, val angle1: Float?, val angle2: Float?) : CombinedSensorData()
+    data class InternalSensorData(val linAcc: Triple<Float, Float, Float>?) : CombinedSensorData()
 }
 
 
