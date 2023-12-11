@@ -58,6 +58,14 @@ class DataVM @Inject constructor(
         CombinedPolarSensorData.AngleData(angle1, angle2)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    // internal data flow
+    val combinedInternalDataFlow = combine(
+        internalSensorController.intAngleFromAlg1,
+        internalSensorController.intAngleFromAlg2,
+    ) { intAngle1, intAngle2 ->
+        internalSensorData.internalAngles(intAngle1, intAngle2)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
 
 //
 
@@ -84,12 +92,15 @@ class DataVM @Inject constructor(
     val state = combine(
         polarController.angleFromAlg1list,
         polarController.angleFromAlg2list,
+      //  internalSensorController.intAngleFromAlg1list,
+       // internalSensorController.intAngleFromAlg2list,
         polarController.connected,
         _state
-    ) { angleFromAlg1List, angleFromAlg2List, connected, state ->
+    ) { angleFromAlg1List, angleFromAlg2List,  connected, state ->
         state.copy(
             angleFromAlg1List = angleFromAlg1List,
             angleFromAlg2List = angleFromAlg2List,
+
             connected = connected,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
@@ -187,7 +198,9 @@ data class DataUiState(
     val angleFromAlg1List: List<Float> = emptyList(),
     val angleFromAlg2List: List<Float> = emptyList(),
     val connected: Boolean = false,
-    val measuring: Boolean = false
+    val measuring: Boolean = false,
+    val intAngleFromAlg1list: List<Float> = emptyList(),
+    val intAngleFromAlg2list: List<Float> = emptyList(),
 )
 
 
@@ -200,9 +213,14 @@ sealed class CombinedSensorData {
     data class HrData(val hr: Int?) : CombinedSensorData()
     data class AccelerometerData(val acc: Triple<Float, Float, Float>?,val ang: Float?) : CombinedSensorData()
     data class InternalSensorData(val linAcc: Triple<Float, Float, Float>?) : CombinedSensorData()//, val angle1: Float?, val angle2: Float?) : CombinedSensorData()
+
 }
 sealed class CombinedPolarSensorData {
     data class AngleData(val angle1: Float?, val angle2: Float?) : CombinedPolarSensorData()
+}
+
+sealed class internalSensorData {
+    data class internalAngles(val intAngle1: Float?, val intAngle2: Float?) : internalSensorData()
 }
 
 

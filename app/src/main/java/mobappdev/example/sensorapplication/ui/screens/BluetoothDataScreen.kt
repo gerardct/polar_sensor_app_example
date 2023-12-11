@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobappdev.example.sensorapplication.ui.viewmodels.CombinedSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.CombinedPolarSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
+import mobappdev.example.sensorapplication.ui.viewmodels.internalSensorData
 
 @Composable
 fun BluetoothDataScreen(
@@ -61,6 +62,27 @@ fun BluetoothDataScreen(
                         String.format("%.1f,%.1f", angle1pol, angle2pol)
                     }
                 }
+                else -> "-"
+            }
+        }
+
+        state.connected && state.measuring -> {
+            // Display internal sensor data when measuring
+            when (val internalSensorData = vm.combinedInternalDataFlow.collectAsState().value) {
+                is internalSensorData.internalAngles -> {
+                    val intAngle1 = internalSensorData.intAngle1
+                    val intAngle2 = internalSensorData.intAngle2
+                    if (intAngle1 == null || intAngle2 == null) {
+                        "-"
+                    } else {
+                        String.format(
+                            "Internal Angle 1: %.1f\nInternal Angle 2: %.1f",
+                            intAngle1,
+                            intAngle2
+                        )
+                    }
+                }
+
                 else -> "-"
             }
         }

@@ -16,13 +16,9 @@ interface InternalSensorController {
     val streamingGyro: StateFlow<Boolean>
     val streamingLinAcc: StateFlow<Boolean>
 
-    //val connected: StateFlow<Boolean>
     val measuring: StateFlow<Boolean>
 
     // to display angle from algorithm 1 and 2:
-    //val currentAngle1: StateFlow<Float?>
-   // val currentAngle2: StateFlow<Float?>
-
     val intAngleFromAlg1: StateFlow<Float?>
     val intAngleFromAlg2: StateFlow<Float?>
     val intAngleFromAlg1list:StateFlow<List<Float>>
