@@ -14,6 +14,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.util.Log
+import com.polar.sdk.api.model.PolarAccelerometerData
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.domain.InternalSensorController
+import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -64,6 +66,10 @@ class InternalSensorControllerImpl(
     override val measuring: StateFlow<Boolean>
         get() = _measuring.asStateFlow()
 
+    private val _internalConnected = MutableStateFlow(false)
+    override val internalConnected: StateFlow<Boolean>
+        get() = _internalConnected.asStateFlow()
+
 
     // Internal sensor Angles from algorithm 1
     private val _intAngleFromAlg1 = MutableStateFlow<Float?>(null)
@@ -77,35 +83,30 @@ class InternalSensorControllerImpl(
 
     // angles to List
     private val _intAngleFromAlg1List = MutableStateFlow<List<Float>>(emptyList())
-    override val intAngleFromAlg1list: StateFlow<List<Float>>
+    override val intAngleFromAlg1List: StateFlow<List<Float>>
         get() = _intAngleFromAlg1List.asStateFlow()
 
     private val _intAngleFromAlg2List = MutableStateFlow<List<Float>>(emptyList())
-    override val intAngleFromAlg2list: StateFlow<List<Float>>
+    override val intAngleFromAlg2List: StateFlow<List<Float>>
         get() = _intAngleFromAlg2List.asStateFlow()
 
-
-    // Callback to update internal sensor data
-    //private var internalSensorDataCallback: ((Triple<Float, Float, Float>?) -> Unit)? = null
-
-    // Setter function for the callback
-   // override fun setInternalSensorDataCallback(callback: (Triple<Float, Float, Float>?) -> Unit) {
-     //   internalSensorDataCallback = callback
-   // }
 
 
 
     // start streaming: IMU = gyro + linear acceleration
     override fun startImuStream() {
         // Todo: implement
+
+        _measuring.update { true }
+        _internalConnected.update {true}
+
+        startGyroStream() // Start gyroscope events
+
         if (_streamingGyro.value || _streamingLinAcc.value) {
             // IMU stream is already running, no need to start again
             return
         }
-        // Start gyroscope events
-        startGyroStream()
 
-        _measuring.update { true }
 
         // Start linear acceleration events
         val linAccSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
@@ -114,15 +115,18 @@ class InternalSensorControllerImpl(
             _streamingLinAcc.value = true
 
             // Set measuring to true when starting the stream
-            updateMeasuringState(true)
+           // updateMeasuringState(true)
+
+            applyAngleOfElevation()
         }
     }
-
 
 
     override fun applyAngleOfElevation () {
         val intAcc = _currentLinAccUI.value
         val intGyro = _currentGyroUI.value
+
+        //Log.d(LOG_TAG, "Linear Acc: $intAcc, Gyro: $intGyro")
 
         if (intAcc != null && intGyro != null) {
             // Algorithm 1: compute angle of elevation
@@ -135,8 +139,13 @@ class InternalSensorControllerImpl(
                 intGyro.first, intGyro.second, intGyro.third
             )
 
+            _intAngleFromAlg1.update { intAngleFromAlg1 }
+            _intAngleFromAlg2.update { intAngleFromAlg2 }
+
+            // update lists if needed
             _intAngleFromAlg1List.update { list -> list + intAngleFromAlg1 }
             _intAngleFromAlg2List.update { list -> list + intAngleFromAlg2 }
+
         }
     }
 
@@ -149,15 +158,16 @@ class InternalSensorControllerImpl(
         private fun computeAngleOfElevation(ax: Float, ay: Float, az: Float): Float {
 
             //calculate the angle
-            val angle = Math.atan2(az.toDouble(), sqrt(ax * ax + ay * ay).toDouble()).toFloat()
+            val angleRad = Math.atan2(az.toDouble(), sqrt(ax * ax + ay * ay).toDouble()).toFloat()
+
+            val angleDeg = Math.toDegrees(angleRad.toDouble()).toFloat()
 
             // EWMA Filter
-            val filteredAngle = alpha * angle + (1 - alpha) * lastFilteredAngle
+            val filteredAngle = alpha * angleDeg + (1 - alpha) * lastFilteredAngle
             // Update the previous filtered angle for the next iteration
             lastFilteredAngle = filteredAngle
 
-            val filteredAngleInDegrees = Math.toDegrees(filteredAngle.toDouble()).toFloat()
-            return filteredAngleInDegrees
+            return filteredAngle.absoluteValue
 
         }
 
@@ -187,18 +197,16 @@ class InternalSensorControllerImpl(
         )
 
         // Calculate the elevation angle
-        val AngleRadians = atan2(filteredAccelerationY, magnitude)
+        val angleRadians = atan2(filteredAccelerationY, magnitude)
 
-        // give out the result in degrees
-        return Math.toDegrees(AngleRadians.toDouble()).toFloat()
+        // Adjust the angle based on orientation (perpendicular: 90 degrees, parallel: 0 degrees)
+        val adjustedAngle = Math.toDegrees(angleRadians.toDouble()).toFloat()
+
+        // If sensor is parallel to the ground, return 0 degrees; if perpendicular, return 90 degrees
+        return adjustedAngle.absoluteValue
     }
 
 
-
-    // Function to update measuring state
-    private fun updateMeasuringState(value: Boolean) {
-        _measuring.value = value
-    }
 
 
     override fun stopImuStream() {
@@ -219,10 +227,14 @@ class InternalSensorControllerImpl(
                 _streamingLinAcc.value = false
 
                 // Set measuring to false when stopping the stream
-                updateMeasuringState(false)
+                _internalConnected.update {false}
+                _measuring.update {false}
             }
         }
     }
+
+
+
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun startGyroStream() {
@@ -261,39 +273,52 @@ class InternalSensorControllerImpl(
 
 
 
+    private fun handleInternalAccData(sensorEvent: SensorEvent) {
+        if (sensorEvent.sensor.type == Sensor.TYPE_ACCELEROMETER) {
+            val accelerationTriple = Triple(
+                sensorEvent.values[0],
+                sensorEvent.values[1],
+                sensorEvent.values[2]
+            )
+            _currentLinAccUI.update { accelerationTriple }
+            applyAngleOfElevation() //  calculate angles after receiving accelerometer data
+        }
+    }
+
+    private fun handleInternalGyroData(sensorEvent: SensorEvent) {
+        if (sensorEvent.sensor.type == Sensor.TYPE_GYROSCOPE) {
+            val gyroTriple = Triple(
+                sensorEvent.values[0],
+                sensorEvent.values[1],
+                sensorEvent.values[2]
+            )
+            _currentGyroUI.update { gyroTriple }
+            applyAngleOfElevation() // calculate angles after receiving gyroscope data
+        }
+    }
+
     override fun onSensorChanged(event: SensorEvent) {
-        // linear acceleration data:
-        val ax = event.values[0]
-        val ay = event.values[1]
-        val az = event.values[2]
 
         if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-            // Extract gyro data (angular speed around X, Y, and Z axes (for algorithm 2)
+            // Extract gyro data (angular speed around X, Y, and Z axes)
             _currentGyro = Triple(event.values[0], event.values[1], event.values[2])
 
-            // Apply complementary filter for gyroscope (for algorithm 2)
-            //val angle2 = applyComplementaryFilter(ax, ay, az, _currentGyro ?: Triple(0.0f, 0.0f, 0.0f))
-
-            // Update UI or perform further processing with the filtered gyro data
-            // _currentLinAccUI.value = angle2
-
-            // Update internal sensor data stream (with callback)
-            //internalSensorDataCallback?.invoke(angle2)
-            //updateCurrentAngle1(angle2)
+            // Handle gyro data
+            handleInternalGyroData(event) //in here it updates the angle calculation
         }
 
         //if the acceleration changes
         if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
+            handleInternalAccData(event)
 
-            // compute angle of elevation (for algorithm 1)
-            //val angle1 = computeAngleOfElevation(ax, ay, az)
-            // Update UI or perform further processing with the angle1
-            //updateCurrentAngle1(angle1)
-
-            // Update internal sensor data stream
-            //internalSensorDataCallback?.invoke(angle1)
-            // internalSensorDataCallback?.invoke(Triple(ax, ay, az))
         }
+        // Return both angles
+        val angleFromAlg1 = _intAngleFromAlg1.value
+        val angleFromAlg2 = _intAngleFromAlg2.value
+
+        // Do something with the angles, for example, log them
+        Log.d(LOG_TAG, "Angle from Alg1: $angleFromAlg1, Angle from Alg2: $angleFromAlg2")
+
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {

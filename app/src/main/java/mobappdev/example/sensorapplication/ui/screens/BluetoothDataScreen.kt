@@ -52,12 +52,9 @@ fun BluetoothDataScreen(
     var polarConnected by remember { mutableStateOf<Boolean>(false) }
     var internalConnected by remember { mutableStateOf<Boolean>(false) }
 
-    // Extract the values from the state objects
-    //val angle1: Float? = angle1State.value
-    //val angle2: Float? = angle2State.value
 
     val value: String = when {
-        state.connected && state.measuring -> {
+        internalConnected && state.measuring -> {
             // Connected case
             // Your existing logic based on CombinedSensorData
             when (val combinedPolarSensorData = vm.combinedPolarDataFlow.collectAsState().value) {
@@ -65,7 +62,7 @@ fun BluetoothDataScreen(
                     val angle1pol = combinedPolarSensorData.angle1
                     val angle2pol = combinedPolarSensorData.angle2
                     if (angle1pol == null || angle2pol == null) {
-                        "-"
+                        "no angle"
                     } else {
                         String.format(
                             "Angle (algorithm 1) = %.1f, Angle (algorithm 2) = %.1f",
@@ -78,14 +75,14 @@ fun BluetoothDataScreen(
             }
         }
 
-        state.connected && state.measuring -> {
+        state.measuring  && internalConnected -> {
             // Display internal sensor data when measuring
             when (val internalSensorData = vm.combinedInternalDataFlow.collectAsState().value) {
                 is internalSensorData.internalAngles -> {
                     val intAngle1 = internalSensorData.intAngle1
                     val intAngle2 = internalSensorData.intAngle2
                     if (intAngle1 == null || intAngle2 == null) {
-                        "-"
+                        "no angle"
                     } else {
                         String.format(
                             "Internal Angle 1: %.1f\nInternal Angle 2: %.1f",
@@ -153,7 +150,7 @@ fun BluetoothDataScreen(
             modifier = Modifier.fillMaxWidth()
         ){
             Button(
-                onClick = {vm.connectToSensor()
+                onClick = {vm::connectToSensor
                     polarConnected = true
                     internalConnected = false
                     },
@@ -166,7 +163,7 @@ fun BluetoothDataScreen(
                 Text(text = "Polar sense")
             }
             Button(
-                onClick = {vm.disconnectFromSensor()
+                onClick = {vm::disconnectFromSensor
                     internalConnected = true
                     polarConnected = false
                     },

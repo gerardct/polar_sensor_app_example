@@ -23,6 +23,15 @@ import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
 import javax.inject.Inject
 
+import android.os.Environment
+import kotlinx.coroutines.delay
+import java.io.File
+import java.io.FileWriter
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlinx.coroutines.launch
+
+
 @HiltViewModel
 class DataVM @Inject constructor(
     private val polarController: PolarController,
@@ -31,6 +40,8 @@ class DataVM @Inject constructor(
 
     private val gyroDataFlow = internalSensorController.currentGyroUI
     private val linAccDataFlow = internalSensorController.currentLinAccUI
+    // private val angle 1
+    // private val angle 2
 
     private val hrDataFlow = polarController.currentHR
     private val accDataFlow = polarController.currentAcceleration
@@ -38,18 +49,11 @@ class DataVM @Inject constructor(
     private val ang1dataFlowPol = polarController.angleFromAlg1
     private val ang2dataFlowPol = polarController.angleFromAlg2
 
-    //val angle1Flow = internalSensorController.currentAngle1
-    //val angle2Flow = internalSensorController.currentAngle2
 
 
-    // for the internal sensor:
-    //init {
-        // Set the callback for the internal sensor controller
-       // internalSensorController.setInternalSensorDataCallback { tripleData ->
 
-       // }
-    //}
-//Prova separant Polar i internal
+
+// Separant Polar i internal
 
     val combinedPolarDataFlow = combine(
         polarController.angleFromAlg1,
@@ -63,9 +67,8 @@ class DataVM @Inject constructor(
         internalSensorController.intAngleFromAlg1,
         internalSensorController.intAngleFromAlg2,
     ) { intAngle1, intAngle2 ->
-        internalSensorData.internalAngles(intAngle1, intAngle2)
+        internalSensorData.internalAngles(intAngle1 ?: 0.0f, intAngle2 ?: 0.0f)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
 
 //
 
@@ -92,18 +95,23 @@ class DataVM @Inject constructor(
     val state = combine(
         polarController.angleFromAlg1list,
         polarController.angleFromAlg2list,
-      //  internalSensorController.intAngleFromAlg1list,
-       // internalSensorController.intAngleFromAlg2list,
         polarController.connected,
+        internalSensorController.intAngleFromAlg1List,
+        //internalSensorController.intAngleFromAlg2,
+
         _state
-    ) { angleFromAlg1List, angleFromAlg2List,  connected, state ->
+    ) { angleFromAlg1List, angleFromAlg2List, connected, intAngleFromAlg1List,
+         state->
         state.copy(
             angleFromAlg1List = angleFromAlg1List,
             angleFromAlg2List = angleFromAlg2List,
+            intAngleFromAlg1List = intAngleFromAlg1List,
+           // intAngleFromAlg2List = intAngleFromAlg2List,
 
-            connected = connected,
+            connected = connected
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
+
 
 
     private var streamType: StreamType? = null
@@ -177,16 +185,71 @@ class DataVM @Inject constructor(
 
 
     // this is for the recording of data:
+    private var recordingStartedTimestamp: Long = 0
+    private val recordingDuration = 30 * 1000L // duration: 30 seconds
+
     fun startRecording() {
         // start recording logic
+        recordingStartedTimestamp = System.currentTimeMillis()
+        _state.update { it.copy(measuring = true) }
+
+        // Delay for the specified recording duration
+        viewModelScope.launch {
+            delay(recordingDuration)
+            stopRecording()
+        }
+        // save measurements to a local database (different view to display the results)
+
     }
+
 
     fun stopRecording() {
         // stop recording logic
+        recordingStartedTimestamp = 0
+        _state.update { it.copy(measuring = false) }
+
+        // Export data after stopping recording
+        createCSVString()
     }
 
-    fun exportDataToCSV() {
+    //this is only example. replace it with a list from the resulting angle
+    private val elevationDataList = mutableListOf<Pair<Long, Float>>() // Example elevation data list
+
+    fun createCSVString(): String {
         // logic to export and get the data to CSV format
+        //create a CSV string representing the data and then save it to a file
+        val csvStringBuilder = StringBuilder() //build CVS string
+
+        // add header row:
+        csvStringBuilder.append("Timestamp, Elevation\n")
+
+        elevationDataList.forEach { (timestamp, elevation) ->
+            csvStringBuilder.append("$timestamp, $elevation\n")
+        }
+
+        return csvStringBuilder.toString()
+    }
+
+    private fun saveCSVToFile(csvString: String) {
+        try {
+            val root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val fileName = "sensor_data_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.csv"
+            val file = File(root, fileName)
+
+            FileWriter(file).use { writer ->
+                writer.write(csvString)
+            }
+
+            // TODO: Notify the user that the export was successful, and provide the file path
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // TODO: notify the user of export failure?
+        }
+    }
+    fun exportDataToCSV() {
+        val csvString = createCSVString()
+        saveCSVToFile(csvString)
     }
 
 
@@ -197,10 +260,10 @@ data class DataUiState(
     val accelerationList: List<Triple<Float, Float, Float>?> = emptyList(), // Define the type of data in the list
     val angleFromAlg1List: List<Float> = emptyList(),
     val angleFromAlg2List: List<Float> = emptyList(),
+    val intAngleFromAlg1List: List<Float> = emptyList(),
+    val intAngleFromAlg2List: List<Float?> = emptyList(),
     val connected: Boolean = false,
-    val measuring: Boolean = false,
-    val intAngleFromAlg1list: List<Float> = emptyList(),
-    val intAngleFromAlg2list: List<Float> = emptyList(),
+    val measuring: Boolean = false
 )
 
 

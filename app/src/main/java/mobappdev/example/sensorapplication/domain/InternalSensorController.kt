@@ -17,12 +17,14 @@ interface InternalSensorController {
     val streamingLinAcc: StateFlow<Boolean>
 
     val measuring: StateFlow<Boolean>
+    val internalConnected: StateFlow<Boolean>
+
 
     // to display angle from algorithm 1 and 2:
     val intAngleFromAlg1: StateFlow<Float?>
     val intAngleFromAlg2: StateFlow<Float?>
-    val intAngleFromAlg1list:StateFlow<List<Float>>
-    val intAngleFromAlg2list:StateFlow<List<Float>>
+    val intAngleFromAlg1List: StateFlow<List<Float>>
+    val intAngleFromAlg2List: StateFlow<List<Float?>>
 
     fun startImuStream()
     fun stopImuStream()
@@ -31,6 +33,7 @@ interface InternalSensorController {
     fun stopGyroStream()
 
     fun applyAngleOfElevation()
+
 
 
 }

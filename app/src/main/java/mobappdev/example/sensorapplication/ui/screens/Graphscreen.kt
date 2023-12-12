@@ -17,7 +17,7 @@ fun GraphScreen(vm: DataVM) {
     val state = vm.state.collectAsStateWithLifecycle().value
 
     // Assuming state contains timealg1list and angleFromAlg1list
-    val timeList = state.timealg1list
+   // val timeList = state.timealg1list
     val angleList = state.angleFromAlg1List
 
     // Your graph Composable goes here using timeList and angleList
@@ -25,7 +25,7 @@ fun GraphScreen(vm: DataVM) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        LineChart(timeList, angleList)
+       // LineChart(timeList, angleList)
     }
 }
 
