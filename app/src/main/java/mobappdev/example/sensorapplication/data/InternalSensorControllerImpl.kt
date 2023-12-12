@@ -107,7 +107,6 @@ class InternalSensorControllerImpl(
             return
         }
 
-
         // Start linear acceleration events
         val linAccSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
         if (linAccSensor != null) {
@@ -117,7 +116,7 @@ class InternalSensorControllerImpl(
             // Set measuring to true when starting the stream
            // updateMeasuringState(true)
 
-            applyAngleOfElevation()
+            //applyAngleOfElevation()
         }
     }
 

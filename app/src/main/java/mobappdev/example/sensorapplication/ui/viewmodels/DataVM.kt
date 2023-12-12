@@ -261,7 +261,7 @@ data class DataUiState(
     val angleFromAlg1List: List<Float> = emptyList(),
     val angleFromAlg2List: List<Float> = emptyList(),
     val intAngleFromAlg1List: List<Float> = emptyList(),
-    val intAngleFromAlg2List: List<Float?> = emptyList(),
+    val intAngleFromAlg2List: List<Float> = emptyList(),
     val connected: Boolean = false,
     val measuring: Boolean = false
 )

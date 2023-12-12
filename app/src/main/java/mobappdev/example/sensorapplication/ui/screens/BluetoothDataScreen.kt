@@ -54,7 +54,7 @@ fun BluetoothDataScreen(
 
 
     val value: String = when {
-        internalConnected && state.measuring -> {
+        polarConnected && state.measuring -> {
             // Connected case
             // Your existing logic based on CombinedSensorData
             when (val combinedPolarSensorData = vm.combinedPolarDataFlow.collectAsState().value) {
@@ -62,7 +62,7 @@ fun BluetoothDataScreen(
                     val angle1pol = combinedPolarSensorData.angle1
                     val angle2pol = combinedPolarSensorData.angle2
                     if (angle1pol == null || angle2pol == null) {
-                        "no angle"
+                        "-"
                     } else {
                         String.format(
                             "Angle (algorithm 1) = %.1f, Angle (algorithm 2) = %.1f",
@@ -75,7 +75,7 @@ fun BluetoothDataScreen(
             }
         }
 
-        state.measuring  && internalConnected -> {
+        internalConnected && state.measuring  -> {
             // Display internal sensor data when measuring
             when (val internalSensorData = vm.combinedInternalDataFlow.collectAsState().value) {
                 is internalSensorData.internalAngles -> {

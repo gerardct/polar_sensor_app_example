@@ -24,7 +24,7 @@ interface InternalSensorController {
     val intAngleFromAlg1: StateFlow<Float?>
     val intAngleFromAlg2: StateFlow<Float?>
     val intAngleFromAlg1List: StateFlow<List<Float>>
-    val intAngleFromAlg2List: StateFlow<List<Float?>>
+    val intAngleFromAlg2List: StateFlow<List<Float>>
 
     fun startImuStream()
     fun stopImuStream()
