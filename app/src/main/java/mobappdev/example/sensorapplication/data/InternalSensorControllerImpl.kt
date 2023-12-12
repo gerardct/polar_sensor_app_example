@@ -99,8 +99,6 @@ class InternalSensorControllerImpl(
 
     // start streaming: IMU = gyro + linear acceleration
     override fun startImuStream() {
-        // Todo: implement
-
         _measuring.update { true }
         _internalConnected.update {true}
 

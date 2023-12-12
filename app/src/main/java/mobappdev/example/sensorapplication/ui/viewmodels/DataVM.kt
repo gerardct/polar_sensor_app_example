@@ -23,12 +23,9 @@ import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
 import javax.inject.Inject
 
-import android.os.Environment
 import kotlinx.coroutines.delay
 import java.io.File
 import java.io.FileWriter
-import java.text.SimpleDateFormat
-import java.util.*
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -94,25 +91,36 @@ class DataVM @Inject constructor(
 
     private val _state = MutableStateFlow(DataUiState())
 
-    val state = combine(
+    val state = combine( // només agafa 5 variables
         polarController.angleFromAlg1list,
         polarController.angleFromAlg2list,
         polarController.connected,
-        internalSensorController.intAngleFromAlg1List,
-        //internalSensorController.intAngleFromAlg2,
-
         _state
-    ) { angleFromAlg1List, angleFromAlg2List, connected, intAngleFromAlg1List,
-         state->
+    ) { angleFromAlg1List, angleFromAlg2List, connected,
+        state->
         state.copy(
             angleFromAlg1List = angleFromAlg1List,
             angleFromAlg2List = angleFromAlg2List,
-            intAngleFromAlg1List = intAngleFromAlg1List,
-           // intAngleFromAlg2List = intAngleFromAlg2List,
-
             connected = connected
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
+
+    private val _internalState = MutableStateFlow(DataUiState())
+
+    // todo: he intentat separar en un altre state: angles resultants son 0.
+    val internalState = combine (
+        internalSensorController.intAngleFromAlg1List,
+        internalSensorController.intAngleFromAlg2List,
+        internalSensorController.measuring,
+        _internalState
+    ) { intAngleFromAlg1List, intAngleFromAlg2List, measuring, state ->
+        state.copy(
+            intAngleFromAlg1List = intAngleFromAlg1List,
+            intAngleFromAlg2List = intAngleFromAlg1List,
+            measuring = measuring
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _internalState.value)
+
 
 
 
@@ -263,8 +271,8 @@ class DataVM @Inject constructor(
 }
 
 data class DataUiState(
-    val hrList: List<Int> = emptyList(),
-    val accelerationList: List<Triple<Float, Float, Float>?> = emptyList(), // Define the type of data in the list
+   // val hrList: List<Int> = emptyList(),
+    // val accelerationList: List<Triple<Float, Float, Float>?> = emptyList(), // Define the type of data in the list
     val angleFromAlg1List: List<Float> = emptyList(),
     val angleFromAlg2List: List<Float> = emptyList(),
     val intAngleFromAlg1List: List<Float> = emptyList(),
@@ -272,6 +280,8 @@ data class DataUiState(
     val connected: Boolean = false,
     val measuring: Boolean = false
 )
+
+
 
 
 enum class StreamType {
@@ -292,6 +302,7 @@ sealed class CombinedPolarSensorData {
 sealed class internalSensorData {
     data class internalAngles(val intAngle1: Float?, val intAngle2: Float?) : internalSensorData()
 }
+
 
 
 
