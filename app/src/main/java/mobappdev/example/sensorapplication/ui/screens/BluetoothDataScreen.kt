@@ -149,7 +149,7 @@ fun BluetoothDataScreen(
             modifier = Modifier.fillMaxWidth()
         ){
             Button(
-                onClick = {vm::connectToSensor
+                onClick = {vm.connectToSensor()
                     polarConnected = true
                     internalConnected = false
                     },
@@ -162,7 +162,7 @@ fun BluetoothDataScreen(
                 Text(text = "Polar sense")
             }
             Button(
-                onClick = {vm::disconnectFromSensor
+                onClick = {vm.disconnectFromSensor()
                     internalConnected = true
                     polarConnected = false
                     },

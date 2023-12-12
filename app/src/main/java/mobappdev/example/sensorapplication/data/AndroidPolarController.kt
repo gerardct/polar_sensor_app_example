@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import mobappdev.example.sensorapplication.domain.PolarController
 import java.util.UUID
+import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -298,27 +299,34 @@ class AndroidPolarController(
     }
 
 
-    private var lastFilteredAngle: Float = 0.0f // Start with 0 degrees when parallel to the ground
-    private val alpha: Float = 0.4f // Filter factor for the first function
+    private var previousFilteredAngle: Float = 0.0f // Start with 0 degrees when parallel to the ground
+    private val alpha: Float = 0.5f // Filter factor for the first function
 
     private fun computeAngleOfElevation(
         rawAccelerationX: Float,
         rawAccelerationY: Float,
         rawAccelerationZ: Float
     ): Float {
-        val projectedMagnitude = sqrt(rawAccelerationX * rawAccelerationX + rawAccelerationY * rawAccelerationY)
+        val magnitude = sqrt(rawAccelerationX * rawAccelerationX + rawAccelerationY * rawAccelerationY)
 
-        if (projectedMagnitude < 0.000001f) {
-            return 0.0f
-        }
+        // Calculate angle of elevation in radians
+        val angleRadians = atan2(rawAccelerationZ.toDouble(), magnitude.toDouble()).toFloat()
 
-        val elevationAngle = atan2(rawAccelerationZ.toDouble(), projectedMagnitude.toDouble()).toFloat()
+        // Convert radians to degrees
+        val angleDegrees = Math.toDegrees(angleRadians.toDouble()).toFloat()
 
-        val filteredAngle = alpha * elevationAngle + (1 - alpha) * lastFilteredAngle
-        lastFilteredAngle = filteredAngle
+        // Apply EWMA filter
+        val currentFilteredAngle = alpha * angleDegrees + (1 - alpha) * previousFilteredAngle
 
-        return Math.toDegrees(filteredAngle.toDouble()).toFloat()
+        // Update previous filtered angle for the next iteration
+        previousFilteredAngle = currentFilteredAngle
+
+        // Map the angle to a range from 0 to 180 degrees
+        return currentFilteredAngle.absoluteValue
     }
+
+
+
 
     private val alpha2: Float = 0.9f // Filter factor for the second function
 
@@ -338,9 +346,7 @@ class AndroidPolarController(
         // Calculate the magnitude of the acceleration vector
         val magnitude = sqrt(
             filteredAccelerationX * filteredAccelerationX +
-                    filteredAccelerationY * filteredAccelerationY +
-                    filteredAccelerationZ * filteredAccelerationZ
-        )
+                    filteredAccelerationY * filteredAccelerationY)
 
         // Calculate the pitch angle (elevation angle) using trigonometric functions
         val pitchRadians = atan2(filteredAccelerationZ, magnitude)
@@ -349,9 +355,6 @@ class AndroidPolarController(
         val adjustedAngle = Math.toDegrees(pitchRadians.toDouble()).toFloat()
 
         // If sensor is parallel to the ground, return 0 degrees; if perpendicular, return 90 degrees
-        return when {
-            adjustedAngle < 45 -> 90 - adjustedAngle * 2 // Adjust for 0-90 degrees range
-            else -> 90 - adjustedAngle // Adjust for 90-180 degrees range
-        }
+        return adjustedAngle.absoluteValue
     }
 }
