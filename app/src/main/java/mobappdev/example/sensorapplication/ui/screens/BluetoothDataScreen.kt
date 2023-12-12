@@ -67,7 +67,11 @@ fun BluetoothDataScreen(
                     if (angle1pol == null || angle2pol == null) {
                         "-"
                     } else {
-                        String.format("%.1f,%.1f", angle1pol, angle2pol)
+                        String.format(
+                            "Angle (algorithm 1) = %.1f, Angle (algorithm 2) = %.1f",
+                            angle1pol,
+                            angle2pol
+                        )
                     }
                 }
                 else -> "-"

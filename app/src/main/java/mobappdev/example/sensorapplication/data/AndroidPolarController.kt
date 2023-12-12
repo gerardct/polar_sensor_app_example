@@ -83,6 +83,14 @@ class AndroidPolarController(
     override val accelerationList: StateFlow<List<Triple<Float, Float, Float>?>>
         get() = _accelerationList.asStateFlow()
 
+    private val _currentGyro = MutableStateFlow<Triple<Float, Float, Float>?>(null)
+    override val currentGyro: StateFlow<Triple<Float, Float, Float>?>
+        get() = _currentGyro.asStateFlow()
+
+    private val _gyroList = MutableStateFlow<List<Triple<Float, Float, Float>?>>(emptyList())
+    override val gyroList: StateFlow<List<Triple<Float, Float, Float>?>>
+        get() = _gyroList.asStateFlow()
+
 
     private val _angleFromAlg1 = MutableStateFlow<Float?>(null)
     override val angleFromAlg1: StateFlow<Float?>
@@ -100,13 +108,23 @@ class AndroidPolarController(
     override val angleFromAlg2list: StateFlow<List<Float>>
         get() = _angleFromAlg2List.asStateFlow()
 
-    private val _currentGyro = MutableStateFlow<Triple<Float, Float, Float>?>(null)
-    override val currentGyro: StateFlow<Triple<Float, Float, Float>?>
-        get() = _currentGyro.asStateFlow()
+    private val _timealg1 = MutableStateFlow<Long?>(null)
+    override val timealg1: StateFlow<Long?>
+        get() = _timealg1.asStateFlow()
 
-    private val _gyroList = MutableStateFlow<List<Triple<Float, Float, Float>?>>(emptyList())
-    override val gyroList: StateFlow<List<Triple<Float, Float, Float>?>>
-        get() = _gyroList.asStateFlow()
+    private val _timealg2 = MutableStateFlow<Long?>(null)
+    override val timealg2: StateFlow<Long?>
+        get() = _timealg2.asStateFlow()
+
+    private val _timealg1list = MutableStateFlow<List<Long>>(emptyList())
+    override val timealg1list: StateFlow<List<Long>>
+        get() = _timealg1list.asStateFlow()
+
+    private val _timealg2list = MutableStateFlow<List<Long>>(emptyList())
+    override val timealg2list: StateFlow<List<Long>>
+        get() = _timealg2list.asStateFlow()
+
+
 
     init {
         api.setPolarFilter(false) //if true, only Polar devices are looked for
@@ -191,6 +209,9 @@ class AndroidPolarController(
 
     private fun handleAccData(accData: PolarAccelerometerData) {
         for (sample in accData.samples) {
+            val timestamp = sample.timeStamp
+            _timealg1.update { timestamp }
+            _timealg1list.update { timealg1list -> timealg1list + timestamp }
             val accelerationTriple = Triple(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
             _currentAcceleration.update { accelerationTriple }
             calculateAndApplyAngles() // Call here to calculate angles after receiving accelerometer data
@@ -199,6 +220,9 @@ class AndroidPolarController(
 
     private fun handleGyroData(gyroData: PolarGyroData) {
         for (sample in gyroData.samples) {
+            val timestamp = sample.timeStamp
+            _timealg2.update { timestamp }
+            _timealg2list.update { timealg2list -> timealg2list + timestamp }
             val gyroTriple = Triple(sample.x, sample.y, sample.z)
             _currentGyro.update { gyroTriple }
             calculateAndApplyAngles() // Call here to calculate angles after receiving gyroscope data
