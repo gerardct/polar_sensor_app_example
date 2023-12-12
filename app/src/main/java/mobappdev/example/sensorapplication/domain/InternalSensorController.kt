@@ -26,6 +26,8 @@ interface InternalSensorController {
     val intAngleFromAlg1List: StateFlow<List<Float>>
     val intAngleFromAlg2List: StateFlow<List<Float>>
 
+    fun getTimestamps(): List<Long>
+
     fun startImuStream()
     fun stopImuStream()
 

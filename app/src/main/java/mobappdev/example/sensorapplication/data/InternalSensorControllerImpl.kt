@@ -90,7 +90,11 @@ class InternalSensorControllerImpl(
     override val intAngleFromAlg2List: StateFlow<List<Float>>
         get() = _intAngleFromAlg2List.asStateFlow()
 
-
+    // for the recording of the data:
+    private val timestampList = mutableListOf<Long>()
+    override fun getTimestamps(): List<Long> {
+        return timestampList.toList()
+    }
 
 
     // start streaming: IMU = gyro + linear acceleration
@@ -144,6 +148,9 @@ class InternalSensorControllerImpl(
             // update lists if needed
             _intAngleFromAlg1List.update { list -> list + intAngleFromAlg1 }
             _intAngleFromAlg2List.update { list -> list + intAngleFromAlg2 }
+
+            // Add timestamp for the plot
+            timestampList.add(System.currentTimeMillis())
 
         }
     }

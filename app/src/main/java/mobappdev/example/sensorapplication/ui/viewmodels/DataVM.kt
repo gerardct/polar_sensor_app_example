@@ -30,6 +30,8 @@ import java.io.FileWriter
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.launch
+import java.io.IOException
+
 
 
 @HiltViewModel
@@ -209,47 +211,52 @@ class DataVM @Inject constructor(
         _state.update { it.copy(measuring = false) }
 
         // Export data after stopping recording
-        createCSVString()
+        saveCSVToFile()
     }
 
-    //this is only example. replace it with a list from the resulting angle
-    private val elevationDataList = mutableListOf<Pair<Long, Float>>() // Example elevation data list
 
-    fun createCSVString(): String {
-        // logic to export and get the data to CSV format
-        //create a CSV string representing the data and then save it to a file
-        val csvStringBuilder = StringBuilder() //build CVS string
+    // function to save the CSV data to the file
+    private fun saveCSVToFile() {
+        val csvFile = createCsvFile()
 
-        // add header row:
-        csvStringBuilder.append("Timestamp, Elevation\n")
-
-        elevationDataList.forEach { (timestamp, elevation) ->
-            csvStringBuilder.append("$timestamp, $elevation\n")
-        }
-
-        return csvStringBuilder.toString()
-    }
-
-    private fun saveCSVToFile(csvString: String) {
         try {
-            val root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            val fileName = "sensor_data_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.csv"
-            val file = File(root, fileName)
+            FileWriter(csvFile).use { writer ->
+                // Write data to the CSV file
+                val polarAlg1List = polarController.angleFromAlg1list.value
+                val polarAlg2List = polarController.angleFromAlg2list.value
+                val internalAlg1List = internalSensorController.intAngleFromAlg1List.value
+                val internalAlg2List = internalSensorController.intAngleFromAlg2List.value
+                val timestamps = internalSensorController.getTimestamps()
 
-            FileWriter(file).use { writer ->
-                writer.write(csvString)
+                // Write header to the CSV file
+                writer.append("Timestamp, Polar Alg1, Polar Alg2, Internal Alg1, Internal Alg2\n")
+
+                for (i in timestamps.indices) {
+                    val timestamp = timestamps[i]
+                    val polarAlg1 = polarAlg1List.getOrNull(i) ?: 0.0
+                    val polarAlg2 = polarAlg2List.getOrNull(i) ?: 0.0
+                    val internalAlg1 = internalAlg1List.getOrNull(i) ?: 0.0
+                    val internalAlg2 = internalAlg2List.getOrNull(i) ?: 0.0
+
+                    writer.append("$timestamp, $polarAlg1, $polarAlg2, $internalAlg1, $internalAlg2\n")
+                }
             }
-
-            // TODO: Notify the user that the export was successful, and provide the file path
-
-        } catch (e: Exception) {
+            // File saved successfully
+        } catch (e: IOException) {
             e.printStackTrace()
-            // TODO: notify the user of export failure?
+            // show error message if it didn't work
         }
     }
-    fun exportDataToCSV() {
-        val csvString = createCSVString()
-        saveCSVToFile(csvString)
+
+    private fun createCsvFile():
+            File {
+        val directory = File("/Users/claudiasegales/Desktop")  // directory to save the file
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+
+        val fileName = "Lab1_3_sensor_data.csv"
+        return File(directory, fileName)
     }
 
 
