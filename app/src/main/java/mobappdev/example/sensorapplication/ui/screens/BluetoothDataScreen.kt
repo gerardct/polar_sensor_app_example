@@ -20,14 +20,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,6 +39,8 @@ import mobappdev.example.sensorapplication.ui.viewmodels.CombinedSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.CombinedPolarSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 import mobappdev.example.sensorapplication.ui.viewmodels.internalSensorData
+import androidx.compose.runtime.*
+
 
 @Composable
 fun BluetoothDataScreen(
@@ -43,6 +49,8 @@ fun BluetoothDataScreen(
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
 
+    var polarConnected by remember { mutableStateOf<Boolean>(false) }
+    var internalConnected by remember { mutableStateOf<Boolean>(false) }
 
     // Extract the values from the state objects
     //val angle1: Float? = angle1State.value
@@ -123,7 +131,7 @@ fun BluetoothDataScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
-        Text(text = if (state.connected) "connected" else "disconnected")
+        Text(text = if (state.connected) "Polar sense connected" else "Polar sense disconnected")
         Box(
             contentAlignment = Center,
             modifier = Modifier.weight(1f)
@@ -134,30 +142,37 @@ fun BluetoothDataScreen(
                 color = Color.Black,
             )
         }
+        Text(text = "Select sensor:")
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround,
             modifier = Modifier.fillMaxWidth()
         ){
             Button(
-                onClick = vm::connectToSensor,
-                enabled = !state.connected,
+                onClick = {vm::connectToSensor
+                    polarConnected = true
+                    internalConnected = false
+                    },
+                enabled = !polarConnected,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Connect\n${deviceId}")
+                Text(text = "Polar sense")
             }
             Button(
-                onClick = vm::disconnectFromSensor,
-                enabled = state.connected,
+                onClick = {vm::disconnectFromSensor
+                    internalConnected = true
+                    polarConnected = false
+                    },
+                enabled = !internalConnected,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Disconnect")
+                Text(text = "Internal")
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -165,18 +180,7 @@ fun BluetoothDataScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround,
             modifier = Modifier.fillMaxWidth()
-        ){
-            Button(
-                onClick = vm::startHr,
-                enabled = (state.connected && !state.measuring),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = Color.Gray
-                )
-            ) {
-                Text(text = "Start Hr Stream")
-            }
-            Button(
+        ){ Button(
                 onClick = vm::startPolar,
                 enabled = (state.connected && !state.measuring),
                 colors = ButtonDefaults.buttonColors(
@@ -229,3 +233,4 @@ fun BluetoothDataScreen(
 
     }
 }
+
