@@ -75,6 +75,7 @@ fun BluetoothDataScreen(
                 is CombinedPolarSensorData.AngleData -> {
                     val angle1pol = combinedPolarSensorData.angle1
                     val angle2pol = combinedPolarSensorData.angle2
+                    val time1 = combinedPolarSensorData.time1
                     if (angle1pol == null || angle2pol == null) {
                         "-"
                     } else {

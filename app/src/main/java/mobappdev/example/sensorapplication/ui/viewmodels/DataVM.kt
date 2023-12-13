@@ -311,7 +311,7 @@ sealed class CombinedSensorData {
 
 }
 sealed class CombinedPolarSensorData {
-    data class AngleData(val angle1: Float?, val angle2: Float?,val Time1: Long?,val Time2: Long?) : CombinedPolarSensorData()
+    data class AngleData(val angle1: Float?, val angle2: Float?,val time1: Long?,val time2: Long?) : CombinedPolarSensorData()
 }
 
 sealed class internalSensorData {
