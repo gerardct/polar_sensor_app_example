@@ -40,11 +40,12 @@ import mobappdev.example.sensorapplication.ui.viewmodels.CombinedPolarSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 import mobappdev.example.sensorapplication.ui.viewmodels.internalSensorData
 import androidx.compose.runtime.*
+import androidx.navigation.NavController
 
 
 @Composable
 fun BluetoothDataScreen(
-    vm: DataVM
+    vm: DataVM, navController: NavController
 ) {
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
@@ -182,7 +183,8 @@ fun BluetoothDataScreen(
             horizontalArrangement = Arrangement.SpaceAround,
             modifier = Modifier.fillMaxWidth()
         ){ Button(
-                onClick = vm::startPolar,
+                onClick = {vm.startPolar() // Your existing function call
+                        navController.navigate("Graphscreen")}, // Navigate to Graphscreen,
                 enabled = (state.connected && !state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,

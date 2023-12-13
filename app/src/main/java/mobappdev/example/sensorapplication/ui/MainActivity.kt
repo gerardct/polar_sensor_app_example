@@ -18,8 +18,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import mobappdev.example.sensorapplication.ui.screens.BluetoothDataScreen
+import mobappdev.example.sensorapplication.ui.screens.GraphScreen
 import mobappdev.example.sensorapplication.ui.theme.SensorapplicationTheme
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 
@@ -53,9 +58,20 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    BluetoothDataScreen(
-                        vm = dataVM
-                    )
+                    val navController = rememberNavController()
+                    NavHost(
+                        navController = navController,
+                        startDestination = "BluetoothDataScreen"
+                    ) {
+                        composable("BluetoothDataScreen") {
+
+                            BluetoothDataScreen(vm = dataVM, navController = navController)
+                        }
+                        composable("Graphscreen") {
+                            // Instantiate the viewmodel
+                            GraphScreen(vm = dataVM, navController = navController)
+                        }
+                    }
                 }
             }
         }

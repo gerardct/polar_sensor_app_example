@@ -57,8 +57,10 @@ class DataVM @Inject constructor(
     val combinedPolarDataFlow = combine(
         polarController.angleFromAlg1,
         polarController.angleFromAlg2,
-    ) { angle1, angle2 ->
-        CombinedPolarSensorData.AngleData(angle1, angle2)
+        polarController.timealg1,
+        polarController.timealg2
+    ) { angle1, angle2, time1, time2 ->
+        CombinedPolarSensorData.AngleData(angle1, angle2,time1,time2)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     // internal data flow
@@ -94,13 +96,15 @@ class DataVM @Inject constructor(
     val state = combine( // només agafa 5 variables
         polarController.angleFromAlg1list,
         polarController.angleFromAlg2list,
+        polarController.timealg1list,
         polarController.connected,
         _state
-    ) { angleFromAlg1List, angleFromAlg2List, connected,
+    ) { angleFromAlg1List, angleFromAlg2List, time1list, connected,
         state->
         state.copy(
             angleFromAlg1List = angleFromAlg1List,
             angleFromAlg2List = angleFromAlg2List,
+            timePolList = time1list,
             connected = connected
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
@@ -276,6 +280,7 @@ data class DataUiState(
     // val accelerationList: List<Triple<Float, Float, Float>?> = emptyList(), // Define the type of data in the list
     val angleFromAlg1List: List<Float> = emptyList(),
     val angleFromAlg2List: List<Float> = emptyList(),
+    val timePolList: List<Long?> = emptyList(),
     val intAngleFromAlg1List: List<Float> = emptyList(),
     val intAngleFromAlg2List: List<Float> = emptyList(),
     val connected: Boolean = false,
@@ -297,7 +302,7 @@ sealed class CombinedSensorData {
 
 }
 sealed class CombinedPolarSensorData {
-    data class AngleData(val angle1: Float?, val angle2: Float?) : CombinedPolarSensorData()
+    data class AngleData(val angle1: Float?, val angle2: Float?,val Time1: Long?,val Time2: Long?) : CombinedPolarSensorData()
 }
 
 sealed class internalSensorData {
