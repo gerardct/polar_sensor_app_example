@@ -178,7 +178,7 @@ class InternalSensorControllerImpl(
         private fun computeAngleOfElevation(ax: Float, ay: Float, az: Float): Float {
 
             //calculate the angle
-            val angleRad = Math.atan2(az.toDouble(), sqrt(ax * ax + ay * ay).toDouble()).toFloat()
+            val angleRad = atan2(az.toDouble(), sqrt(ax * ax + ay * ay).toDouble()).toFloat()
 
             val angleDeg = Math.toDegrees(angleRad.toDouble()).toFloat()
 
