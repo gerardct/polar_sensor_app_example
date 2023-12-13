@@ -48,6 +48,7 @@ fun BluetoothDataScreen(
     vm: DataVM, navController: NavController
 ) {
     val state = vm.state.collectAsStateWithLifecycle().value
+    val internalstate = vm.internalState.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
 
     var polarConnected by remember { mutableStateOf<Boolean>(false) }
