@@ -50,7 +50,7 @@ fun BluetoothDataScreen(
     vm: DataVM, navController: NavController
 ) {
     val state = vm.state.collectAsStateWithLifecycle().value
-    val internalstate = vm.internalState.collectAsStateWithLifecycle().value
+    val internalState = vm.internalState.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
 
     var polarConnected by remember { mutableStateOf<Boolean>(false) }
@@ -60,9 +60,11 @@ fun BluetoothDataScreen(
         }.value
     }
     var internalConnected by remember { mutableStateOf<Boolean>(false) }
-    internalConnected = remember(state.connected) {
+        internalConnected = remember(state.connected) {
         !state.connected
     }
+
+    //var internalRunning by remember { mutableStateOf<Boolean>(false) }
 
 
     val value: String = when {
@@ -174,13 +176,15 @@ fun BluetoothDataScreen(
             }
             Button(
                 onClick = vm::disconnectFromSensor,
-                enabled = !internalConnected,
+                enabled =  !internalConnected,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
                 )
             ) {
                 Text(text = "Internal")
+               // Text(text = if (internalConnected) "Internal Connected" else "Internal")
+
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -218,7 +222,6 @@ fun BluetoothDataScreen(
             }
         }
 
-
         // new row for starting /stopping the internal sensor
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -228,6 +231,7 @@ fun BluetoothDataScreen(
             Button(
                 onClick = {
                     vm.startImuStream()
+                    //internalRunning = true
                 },
                 enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
