@@ -171,7 +171,7 @@ class DataVM @Inject constructor(
     fun stopDataStream() {
         when (streamType) {
             StreamType.LOCAL_GYRO -> internalSensorController.stopGyroStream()
-            StreamType.LOCAL_ACC -> internalSensorController.stopImuStream()
+            StreamType.LOCAL_ACC -> internalSensorController.stopImuStream() // stop overall imu stream
             StreamType.FOREIGN_HR -> polarController.stopHrStreaming()
             StreamType.FOREIGN -> polarController.stopCombinedStreaming()
 

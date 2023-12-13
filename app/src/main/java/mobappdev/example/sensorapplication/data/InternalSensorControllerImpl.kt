@@ -306,7 +306,6 @@ class InternalSensorControllerImpl(
     private fun handleInternalAccData(sensorEvent: SensorEvent) {
         //for (sample in _streamingLinAcc.sample)
         if (sensorEvent.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
-            //TYPE_ACCELEROMETER
             val timestamp = sensorEvent.timestamp
             _timeIntalg1.update { timestamp }
             _timeIntalg1list.update { timeIntalg1list -> timeIntalg1list + timestamp }
