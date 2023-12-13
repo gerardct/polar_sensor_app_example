@@ -239,19 +239,26 @@ class DataVM @Inject constructor(
                 val polarAlg2List = polarController.angleFromAlg2list.value
                 val internalAlg1List = internalSensorController.intAngleFromAlg1List.value
                 val internalAlg2List = internalSensorController.intAngleFromAlg2List.value
-                val timestamps = internalSensorController.getTimestamps()
+                val timeAlg1List = polarController.timealg1list.value
+                val timeAlg2List = polarController.timealg2list.value
+                val timeIntAlg1List = internalSensorController.timeIntalg1list.value
+                val timeIntAlg2List = internalSensorController.timeIntalg2list.value
 
                 // Write header to the CSV file
-                writer.append("Timestamp, Polar Alg1, Polar Alg2, Internal Alg1, Internal Alg2\n")
+                writer.append("Timestamp, Polar Alg1, Polar Alg2, Internal Alg1, Internal Alg2, Time Alg1, Time Alg2, Time Int Alg1, Time Int Alg2\n")
 
-                for (i in timestamps.indices) {
-                    val timestamp = timestamps[i]
+                for (i in timeIntAlg1List.indices){
+                    val timestamp = timeIntAlg1List[i]
                     val polarAlg1 = polarAlg1List.getOrNull(i) ?: 0.0
                     val polarAlg2 = polarAlg2List.getOrNull(i) ?: 0.0
                     val internalAlg1 = internalAlg1List.getOrNull(i) ?: 0.0
                     val internalAlg2 = internalAlg2List.getOrNull(i) ?: 0.0
+                    val timeAlg1 = timeAlg1List.getOrNull(i) ?: 0L
+                    val timeAlg2 = timeAlg2List.getOrNull(i) ?: 0L
+                    val timeIntAlg1 = timeIntAlg1List[i] ?: 0L
+                    val timeIntAlg2 = timeIntAlg2List[i] ?: 0L
 
-                    writer.append("$timestamp, $polarAlg1, $polarAlg2, $internalAlg1, $internalAlg2\n")
+                    writer.append("$timestamp, $polarAlg1, $polarAlg2, $internalAlg1, $internalAlg2, $timeAlg1, $timeAlg2, $timeIntAlg1, $timeIntAlg2\n")
                 }
             }
             // File saved successfully
@@ -283,6 +290,8 @@ data class DataUiState(
     val timePolList: List<Long?> = emptyList(),
     val intAngleFromAlg1List: List<Float> = emptyList(),
     val intAngleFromAlg2List: List<Float> = emptyList(),
+    val timeIntAlg1List: List<Long?> = emptyList(),
+    val timeIntAlg2List: List<Long?> = emptyList(),
     val connected: Boolean = false,
     val measuring: Boolean = false
 )

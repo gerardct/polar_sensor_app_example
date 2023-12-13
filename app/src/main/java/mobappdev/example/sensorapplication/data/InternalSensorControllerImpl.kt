@@ -91,6 +91,23 @@ class InternalSensorControllerImpl(
         get() = _intAngleFromAlg2List.asStateFlow()
 
     // for the recording of the data: (timestamp)
+    private val _timeIntalg1 = MutableStateFlow<Long?>(null)
+    override val timeIntalg1: StateFlow<Long?>
+        get() = _timeIntalg1.asStateFlow()
+
+    private val _timeIntalg2 = MutableStateFlow<Long?>(null)
+    override val timeIntalg2: StateFlow<Long?>
+        get() = _timeIntalg2.asStateFlow()
+
+    private val _timeIntalg1list = MutableStateFlow<List<Long>>(emptyList())
+    override val timeIntalg1list: StateFlow<List<Long>>
+        get() = _timeIntalg1list.asStateFlow()
+
+    private val _timeIntalg2list = MutableStateFlow<List<Long>>(emptyList())
+    override val timeIntalg2list: StateFlow<List<Long>>
+        get() = _timeIntalg2list.asStateFlow()
+
+
 
     // for the recording of the data:
     private val timestampList = mutableListOf<Long>()
@@ -279,9 +296,9 @@ class InternalSensorControllerImpl(
     private fun handleInternalAccData(sensorEvent: SensorEvent) {
         //for (sample in _streamingLinAcc.sample)
         if (sensorEvent.sensor.type == Sensor.TYPE_ACCELEROMETER) {
-            //val timestamp = sensorEvent.timeStamp
-            //_timeIalg1.update { timestamp }
-            //_timeIalg1list.update { timeIalg1list -> timeIalg1list + timestamp }
+            val timestamp = sensorEvent.timestamp
+            _timeIntalg1.update { timestamp }
+            _timeIntalg1list.update { timeIntalg1list -> timeIntalg1list + timestamp }
             val accelerationTriple = Triple(
                 sensorEvent.values[0],
                 sensorEvent.values[1],
@@ -295,6 +312,10 @@ class InternalSensorControllerImpl(
 
     private fun handleInternalGyroData(sensorEvent: SensorEvent) {
         if (sensorEvent.sensor.type == Sensor.TYPE_GYROSCOPE) {
+            val timestamp = sensorEvent.timestamp
+            _timeIntalg2.update { timestamp }
+            _timeIntalg2list.update { timeIntalg2list -> timeIntalg2list + timestamp }
+
             val gyroTriple = Triple(
                 sensorEvent.values[0],
                 sensorEvent.values[1],
@@ -323,10 +344,12 @@ class InternalSensorControllerImpl(
         // Return both angles
         val angleFromAlg1 = _intAngleFromAlg1.value
         val angleFromAlg2 = _intAngleFromAlg2.value
+        val timestampAlg1 = _timeIntalg1.value
+        val timestampAlg2 = _timeIntalg2.value
 
-        // Do something with the angles, for example, log them
-        Log.d(LOG_TAG, "Angle from Alg1: $angleFromAlg1, Angle from Alg2: $angleFromAlg2")
-
+        // Do something with the angles:  log them
+        Log.d(LOG_TAG, "Angle from Alg1: $angleFromAlg1, Timestamp Alg1: $timestampAlg1")
+        Log.d(LOG_TAG, "Angle from Alg2: $angleFromAlg2, Timestamp Alg2: $timestampAlg2")
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {

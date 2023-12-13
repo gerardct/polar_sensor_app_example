@@ -82,6 +82,8 @@ fun BluetoothDataScreen(
                             angle2pol
                         )
                     }
+
+
                 }
                 else -> "-"
             }
@@ -100,11 +102,9 @@ fun BluetoothDataScreen(
                             "Internal Angle 1: %.1f\nInternal Angle 2: %.1f",
                             intAngle1,
                             intAngle2,
-
                         )
                     }
                 }
-
                 else -> "-"
             }
         }
