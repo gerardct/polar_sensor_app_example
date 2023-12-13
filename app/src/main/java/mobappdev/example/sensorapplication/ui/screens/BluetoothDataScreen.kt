@@ -54,7 +54,15 @@ fun BluetoothDataScreen(
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
 
     var polarConnected by remember { mutableStateOf<Boolean>(false) }
+    polarConnected = remember(state.connected) {
+        derivedStateOf {
+            state.connected
+        }.value
+    }
     var internalConnected by remember { mutableStateOf<Boolean>(false) }
+    internalConnected = remember(state.connected) {
+        !state.connected
+    }
 
 
     val value: String = when {
@@ -155,10 +163,7 @@ fun BluetoothDataScreen(
             modifier = Modifier.fillMaxWidth()
         ){
             Button(
-                onClick = {vm::connectToSensor
-                    polarConnected = true
-                    internalConnected = false
-                    },
+                onClick = vm::connectToSensor,
                 enabled = !polarConnected,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -168,10 +173,7 @@ fun BluetoothDataScreen(
                 Text(text = "Polar sense")
             }
             Button(
-                onClick = {vm::disconnectFromSensor
-                    internalConnected = true
-                    polarConnected = false
-                    },
+                onClick = vm::disconnectFromSensor,
                 enabled = !internalConnected,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
