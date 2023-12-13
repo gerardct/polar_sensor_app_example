@@ -14,7 +14,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.util.Log
-import com.polar.sdk.api.model.PolarAccelerometerData
+//import com.polar.sdk.api.model.PolarAccelerometerData
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -90,6 +90,8 @@ class InternalSensorControllerImpl(
     override val intAngleFromAlg2List: StateFlow<List<Float>>
         get() = _intAngleFromAlg2List.asStateFlow()
 
+    // for the recording of the data: (timestamp)
+
     // for the recording of the data:
     private val timestampList = mutableListOf<Long>()
     override fun getTimestamps(): List<Long> {
@@ -97,11 +99,13 @@ class InternalSensorControllerImpl(
     }
 
 
+
+
+
     // start streaming: IMU = gyro + linear acceleration
     override fun startImuStream() {
-        _measuring.update { true }
+        _measuring.update { true } // Set measuring to true when starting the stream
         _internalConnected.update {true}
-
         startGyroStream() // Start gyroscope events
 
         if (_streamingGyro.value || _streamingLinAcc.value) {
@@ -114,11 +118,6 @@ class InternalSensorControllerImpl(
         if (linAccSensor != null) {
             sensorManager.registerListener(this, linAccSensor, SensorManager.SENSOR_DELAY_UI)
             _streamingLinAcc.value = true
-
-            // Set measuring to true when starting the stream
-           // updateMeasuringState(true)
-
-            //applyAngleOfElevation()
         }
     }
 
@@ -148,7 +147,7 @@ class InternalSensorControllerImpl(
             _intAngleFromAlg2List.update { list -> list + intAngleFromAlg2 }
 
             // Add timestamp for the plot
-            timestampList.add(System.currentTimeMillis())
+            //timestampList.add(System.currentTimeMillis())
 
         }
     }
@@ -278,7 +277,11 @@ class InternalSensorControllerImpl(
 
 
     private fun handleInternalAccData(sensorEvent: SensorEvent) {
+        //for (sample in _streamingLinAcc.sample)
         if (sensorEvent.sensor.type == Sensor.TYPE_ACCELEROMETER) {
+            //val timestamp = sensorEvent.timeStamp
+            //_timeIalg1.update { timestamp }
+            //_timeIalg1list.update { timeIalg1list -> timeIalg1list + timestamp }
             val accelerationTriple = Triple(
                 sensorEvent.values[0],
                 sensorEvent.values[1],
@@ -286,6 +289,7 @@ class InternalSensorControllerImpl(
             )
             _currentLinAccUI.update { accelerationTriple }
             applyAngleOfElevation() //  calculate angles after receiving accelerometer data
+
         }
     }
 

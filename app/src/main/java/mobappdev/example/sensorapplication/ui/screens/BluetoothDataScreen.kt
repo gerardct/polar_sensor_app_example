@@ -8,6 +8,7 @@ package mobappdev.example.sensorapplication.ui.screens
  * Last modified: 2023-07-11
  */
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +42,7 @@ import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 import mobappdev.example.sensorapplication.ui.viewmodels.internalSensorData
 import androidx.compose.runtime.*
 import androidx.navigation.NavController
+//import mobappdev.example.sensorapplication.data.LOG_TAG
 
 
 @Composable
@@ -89,7 +91,8 @@ fun BluetoothDataScreen(
                         String.format(
                             "Internal Angle 1: %.1f\nInternal Angle 2: %.1f",
                             intAngle1,
-                            intAngle2
+                            intAngle2,
+
                         )
                     }
                 }
