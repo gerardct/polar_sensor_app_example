@@ -78,7 +78,7 @@ fun BluetoothDataScreen(
         internalConnected && state.measuring  -> {
             // Display internal sensor data when measuring
             when (val internalSensorData = vm.combinedInternalDataFlow.collectAsState().value) {
-                is internalSensorData.internalAngles -> {
+                is internalSensorData.InternalAngles -> {
                     val intAngle1 = internalSensorData.intAngle1
                     val intAngle2 = internalSensorData.intAngle2
                     if (intAngle1 == null || intAngle2 == null) {
