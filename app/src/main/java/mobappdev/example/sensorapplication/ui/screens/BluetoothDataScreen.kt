@@ -42,7 +42,6 @@ import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 import mobappdev.example.sensorapplication.ui.viewmodels.internalSensorData
 import androidx.compose.runtime.*
 import androidx.navigation.NavController
-//import mobappdev.example.sensorapplication.data.LOG_TAG
 
 
 @Composable
@@ -232,7 +231,6 @@ fun BluetoothDataScreen(
             Button(
                 onClick = {
                     vm.startImuStream()
-                    //internalRunning = true
                 },
                 enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
