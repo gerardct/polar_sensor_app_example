@@ -112,7 +112,7 @@ class InternalSensorControllerImpl(
     // for the recording of the data:
     private val timestampList = mutableListOf<Long>()
     override fun getTimestamps(): List<Long> {
-        return timestampList.toList()
+        return timestampList.map { it / 1_000_000_000 }
     }
 
 
@@ -175,14 +175,23 @@ class InternalSensorControllerImpl(
             _timeIntalg2list.update { timeIntalg2list -> timeIntalg2list + timestamp }
 
             _intAngleFromAlg2.update { intAngleFromAlg2 }
+
+            // Introduce a delay before updating the angle display
+            GlobalScope.launch(Dispatchers.Main) {
+                delay(50000) // Adjust the delay duration as needed
+
+                // Update the UI variable
+                _currentGyroUI.update { _currentGyro }
+            }
+
         }
     }
 
 
 
     // ALGORITHM 1: compute angle of elevation
-    private var lastFilteredAngle: Float = 0.0f
-    private val alpha: Float = 0.9f // for the filter --> Change?
+    private var lastFilteredAngle: Float = -20.0f // Start with 0 degrees when parallel to the ground
+    private val alpha: Float = 0.5f // filter factor
 
         private fun computeAngleOfElevation(ax: Float, ay: Float, az: Float): Float {
 
@@ -202,7 +211,7 @@ class InternalSensorControllerImpl(
 
 
     // ALGORITHM 2: Complimentary filter combining linear acceleration and gyroscope
-    private val alpha2: Float = 0.98f // filter factor
+    private val alpha2: Float = 0.9f // filter factor
 
     private fun applyComplementaryFilter(
         ax: Float,
@@ -226,24 +235,22 @@ class InternalSensorControllerImpl(
         )
 
         // Calculate the elevation angle
-        val angleRadians = atan2(filteredAccelerationY, magnitude)
+        val angleRadians = atan2(filteredAccelerationX, magnitude)
 
         // Adjust the angle based on orientation (perpendicular: 90 degrees, parallel: 0 degrees)
         val adjustedAngle = Math.toDegrees(angleRadians.toDouble()).toFloat()
 
         // If sensor is parallel to the ground, return 0 degrees; if perpendicular, return 90 degrees
-        return adjustedAngle.absoluteValue
+        return adjustedAngle.absoluteValue - 60
     }
 
 
 
     override fun stopImuStream() {
-        // Todo: implement
         if (!_streamingGyro.value && !_streamingLinAcc.value) {
             // IMU stream is not running, nothing to stop
             return
         }
-
         // Stop  gyroscope events
         stopGyroStream()
 
@@ -275,8 +282,11 @@ class InternalSensorControllerImpl(
             return
         }
 
+
         // Register this class as a listener for gyroscope events
         sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_UI)
+
+
 
         // Start a coroutine to update the UI variable on a 2 Hz interval
         GlobalScope.launch(Dispatchers.Main) {
@@ -285,7 +295,7 @@ class InternalSensorControllerImpl(
                 // Update the UI variable
                 _currentGyroUI.update { _currentGyro }
                // val scalingFactor = 0.5
-                delay(50)
+                delay(500)
                 //delay((1000 * scalingFactor).toLong())
             }
         }
@@ -306,7 +316,7 @@ class InternalSensorControllerImpl(
     private fun handleInternalAccData(sensorEvent: SensorEvent) {
         //for (sample in _streamingLinAcc.sample)
         if (sensorEvent.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
-            val timestamp = sensorEvent.timestamp
+            val timestamp = sensorEvent.timestamp / 1_000_000_000 // Convert nanoseconds to seconds
             _timeIntalg1.update { timestamp }
             _timeIntalg1list.update { timeIntalg1list -> timeIntalg1list + timestamp }
             val accelerationTriple = Triple(
@@ -322,7 +332,7 @@ class InternalSensorControllerImpl(
 
     private fun handleInternalGyroData(sensorEvent: SensorEvent) {
         if (sensorEvent.sensor.type == Sensor.TYPE_GYROSCOPE) {
-            val timestamp = sensorEvent.timestamp
+            val timestamp = sensorEvent.timestamp / 1_000_000_000 // Convert nanoseconds to seconds
             _timeIntalg2.update { timestamp }
             _timeIntalg2list.update { timeIntalg2list -> timeIntalg2list + timestamp }
 
@@ -349,7 +359,6 @@ class InternalSensorControllerImpl(
         //if the acceleration changes
         if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
             handleInternalAccData(event)
-
         }
         // Return both angles
         val angleFromAlg1 = _intAngleFromAlg1.value

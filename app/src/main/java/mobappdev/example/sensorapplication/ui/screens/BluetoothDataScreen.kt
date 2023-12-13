@@ -52,6 +52,9 @@ fun BluetoothDataScreen(
     val internalState = vm.internalState.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
 
+    val recordingInProgress by vm.recordingInProgress.collectAsState()
+
+
     var polarConnected by remember { mutableStateOf<Boolean>(false) }
     polarConnected = remember(state.connected) {
         derivedStateOf {
@@ -231,6 +234,7 @@ fun BluetoothDataScreen(
             Button(
                 onClick = {
                     vm.startImuStream()
+                    vm.startRecording() // Start recording when internal stream is started
                 },
                 enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
@@ -240,6 +244,18 @@ fun BluetoothDataScreen(
             ) {
                 Text(text = "Start\nInternal Stream")
             }
+
+            // Display the recording in progress text only if recording is in progress
+            Text(
+                text = if (recordingInProgress) "Recording in progress..." else "",
+                fontSize = 16.sp,
+                modifier = Modifier.padding(8.dp)
+            )
+
+
+
+
+
 
         }
 

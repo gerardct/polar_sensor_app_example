@@ -27,6 +27,8 @@ import mobappdev.example.sensorapplication.ui.viewmodels.CombinedPolarSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 
 
+
+
 @Composable
 fun GraphScreen(vm: DataVM, navController: NavController) {
     val combinedPolarSensorDataFlow = vm.combinedPolarDataFlow
@@ -122,6 +124,9 @@ fun LineChartWithTimeData(dataPoints: List<Pair<Long, Float>>, modifier: Modifie
         drawPath(path = path, color = Color.Blue, style = Stroke(width = 4.dp.toPx()))
     }
 }
+
+
+
 
 
 @Preview

@@ -28,6 +28,9 @@ import java.io.File
 import java.io.FileWriter
 import kotlinx.coroutines.launch
 import java.io.IOException
+//import java.io.File // to be able to save the file
+import android.content.Context
+import android.os.Environment
 
 
 
@@ -198,34 +201,52 @@ class DataVM @Inject constructor(
 
 
 
+    // New state to track whether recording is in progress
+    private val _recordingInProgress = MutableStateFlow(false)
+    val recordingInProgress: StateFlow<Boolean>
+        get() = _recordingInProgress.asStateFlow()
 
     // this is for the recording of data:
     private var recordingStartedTimestamp: Long = 0
-    private val recordingDuration = 30 * 1000L // duration: 30 seconds
+    private val recordingDuration = 10 * 1000L // duration: 10 seconds
 
     // todo: implement start Recroding function after pressing some button
     fun startRecording() {
         // start recording logic
-        recordingStartedTimestamp = System.currentTimeMillis()
-        _state.update { it.copy(measuring = true) }
+        if (!_recordingInProgress.value) {
+            _recordingInProgress.value = true
+            recordingStartedTimestamp = System.currentTimeMillis()
+            _state.update { it.copy(measuring = true) }
 
-        // Delay for the specified recording duration
-        viewModelScope.launch {
-            delay(recordingDuration)
-            stopRecording()
+            // Start a coroutine to check elapsed time and stop recording after 10 seconds
+            viewModelScope.launch {
+                while (_recordingInProgress.value) {
+                    val elapsedTime = System.currentTimeMillis() - recordingStartedTimestamp
+                    if (elapsedTime >= recordingDuration) {
+                        // Stop recording after 10 seconds
+                        stopRecording()
+                        break
+                    }
+                    delay(100) // Optional: adjust the delay based on your needs
+                }
+            }
         }
         // save measurements to a local database (different view to display the results)
-
     }
 
-
     fun stopRecording() {
-        // stop recording logic
-        recordingStartedTimestamp = 0
-        _state.update { it.copy(measuring = false) }
+        if (_recordingInProgress.value) {
+            // stop recording logic
+            recordingStartedTimestamp = 0
+            _recordingInProgress.value = false // Set to false to stop the automatic recording
+            _state.update { it.copy(measuring = false) }
 
-        // Export data after stopping recording
-        saveCSVToFile()
+            // Stop the streaming based on the stream type
+            stopDataStream()
+
+            // Export data after stopping recording
+            saveCSVToFile()
+        }
     }
 
 
@@ -269,15 +290,27 @@ class DataVM @Inject constructor(
         }
     }
 
-    private fun createCsvFile():
-            File {
-        val directory = File("/Users/claudiasegales/Desktop")  // directory to save the file
-        if (!directory.exists()) {
-            directory.mkdirs()
-        }
+    private fun createCsvFile(): File {
+       // val directoryPath = "/storage/emulated/0/files" // change directory
+        //val directory = getExternalFilesDir(null)  // This gets the external storage directory for your app
 
-        val fileName = "Lab1_3_sensor_data.csv"
-        return File(directory, fileName)
+        //val downloadsDirectory = System.getProperty("user.home") + "/Download"
+        val downloadsDir = File(
+            //context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+            "Lab1_3_sensor_data.csv"
+        )
+
+        if (!downloadsDir.parentFile.exists()) {
+            downloadsDir.parentFile.mkdirs()
+        }
+       // val directory = File(downloadsDirectory)
+
+      //  if (!directory.exists()) {
+      //      directory.mkdirs()
+      //  }
+
+        //val fileName = "Lab1_3_sensor_data.csv"
+        return downloadsDir //File(directory, fileName)
     }
 
 
@@ -318,7 +351,4 @@ sealed class CombinedPolarSensorData {
 sealed class internalSensorData {
     data class InternalAngles(val intAngle1: Float?, val intAngle2: Float?) : internalSensorData()
 }
-
-
-
 
