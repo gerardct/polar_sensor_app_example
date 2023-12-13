@@ -198,6 +198,7 @@ class DataVM @Inject constructor(
     private var recordingStartedTimestamp: Long = 0
     private val recordingDuration = 30 * 1000L // duration: 30 seconds
 
+    // todo: implement start Recroding function after pressing some button
     fun startRecording() {
         // start recording logic
         recordingStartedTimestamp = System.currentTimeMillis()
