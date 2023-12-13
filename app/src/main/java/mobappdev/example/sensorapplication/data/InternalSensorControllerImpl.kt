@@ -163,9 +163,18 @@ class InternalSensorControllerImpl(
             _intAngleFromAlg1List.update { list -> list + intAngleFromAlg1 }
             _intAngleFromAlg2List.update { list -> list + intAngleFromAlg2 }
 
-            // Add timestamp for the plot
-            //timestampList.add(System.currentTimeMillis())
+            // Update timestamps when updating angles
+            val timestamp = System.currentTimeMillis()
+            _timeIntalg1.update { timestamp }
+            _timeIntalg1list.update { timeIntalg1list -> timeIntalg1list + timestamp }
 
+            _intAngleFromAlg1.update { intAngleFromAlg1 }
+
+            // Update timestamps when updating angles
+            _timeIntalg2.update { timestamp }
+            _timeIntalg2list.update { timeIntalg2list -> timeIntalg2list + timestamp }
+
+            _intAngleFromAlg2.update { intAngleFromAlg2 }
         }
     }
 
@@ -228,7 +237,6 @@ class InternalSensorControllerImpl(
 
 
 
-
     override fun stopImuStream() {
         // Todo: implement
         if (!_streamingGyro.value && !_streamingLinAcc.value) {
@@ -276,7 +284,9 @@ class InternalSensorControllerImpl(
             while (_streamingGyro.value) {
                 // Update the UI variable
                 _currentGyroUI.update { _currentGyro }
-                delay(500)
+               // val scalingFactor = 0.5
+                delay(50)
+                //delay((1000 * scalingFactor).toLong())
             }
         }
 
@@ -295,7 +305,8 @@ class InternalSensorControllerImpl(
 
     private fun handleInternalAccData(sensorEvent: SensorEvent) {
         //for (sample in _streamingLinAcc.sample)
-        if (sensorEvent.sensor.type == Sensor.TYPE_ACCELEROMETER) {
+        if (sensorEvent.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
+            //TYPE_ACCELEROMETER
             val timestamp = sensorEvent.timestamp
             _timeIntalg1.update { timestamp }
             _timeIntalg1list.update { timeIntalg1list -> timeIntalg1list + timestamp }

@@ -231,7 +231,6 @@ fun BluetoothDataScreen(
             Button(
                 onClick = {
                     vm.startImuStream()
-                    //internalRunning = true
                 },
                 enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
