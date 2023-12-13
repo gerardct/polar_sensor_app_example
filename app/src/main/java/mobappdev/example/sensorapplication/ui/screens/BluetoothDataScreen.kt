@@ -197,7 +197,8 @@ fun BluetoothDataScreen(
             modifier = Modifier.fillMaxWidth()
         ){ Button(
                 onClick = {vm.startPolar() // Your existing function call
-                        navController.navigate("Graphscreen")}, // Navigate to Graphscreen,
+                    vm.startRecording()
+                    navController.navigate("Graphscreen")}, // Navigate to Graphscreen,
                 enabled = (state.connected && !state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -214,7 +215,10 @@ fun BluetoothDataScreen(
             modifier = Modifier.fillMaxWidth()
         ){
             Button(
-                onClick = vm::stopDataStream,
+                onClick = {
+                    vm.stopDataStream()
+                    vm.stopRecording() //when you press stop, it also stops the data recording
+                },
                 enabled = (state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -235,7 +239,8 @@ fun BluetoothDataScreen(
                 onClick = {
                     vm.startImuStream()
                     vm.startRecording() // Start recording when internal stream is started
-                },
+                    navController.navigate("Graphscreen")
+                          },
                 enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,

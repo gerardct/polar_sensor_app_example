@@ -190,8 +190,8 @@ class InternalSensorControllerImpl(
 
 
     // ALGORITHM 1: compute angle of elevation
-    private var lastFilteredAngle: Float = -20.0f // Start with 0 degrees when parallel to the ground
-    private val alpha: Float = 0.5f // filter factor
+    private var lastFilteredAngle: Float = 0.0f // Start with 0 degrees when parallel to the ground
+    private val alpha: Float = 0.4f // filter factor
 
         private fun computeAngleOfElevation(ax: Float, ay: Float, az: Float): Float {
 
@@ -205,7 +205,7 @@ class InternalSensorControllerImpl(
             // Update the previous filtered angle for the next iteration
             lastFilteredAngle = filteredAngle
 
-            return filteredAngle.absoluteValue
+            return filteredAngle //.absoluteValue
 
         }
 
@@ -241,7 +241,7 @@ class InternalSensorControllerImpl(
         val adjustedAngle = Math.toDegrees(angleRadians.toDouble()).toFloat()
 
         // If sensor is parallel to the ground, return 0 degrees; if perpendicular, return 90 degrees
-        return adjustedAngle.absoluteValue - 60
+        return adjustedAngle.absoluteValue
     }
 
 

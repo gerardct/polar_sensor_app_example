@@ -294,20 +294,14 @@ class DataVM @Inject constructor(
        // val directoryPath = "/storage/emulated/0/files" // change directory
         //val directory = getExternalFilesDir(null)  // This gets the external storage directory for your app
 
-        //val downloadsDirectory = System.getProperty("user.home") + "/Download"
         val downloadsDir = File(
-            //context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
             "Lab1_3_sensor_data.csv"
         )
 
         if (!downloadsDir.parentFile.exists()) {
             downloadsDir.parentFile.mkdirs()
         }
-       // val directory = File(downloadsDirectory)
-
-      //  if (!directory.exists()) {
-      //      directory.mkdirs()
-      //  }
 
         //val fileName = "Lab1_3_sensor_data.csv"
         return downloadsDir //File(directory, fileName)
