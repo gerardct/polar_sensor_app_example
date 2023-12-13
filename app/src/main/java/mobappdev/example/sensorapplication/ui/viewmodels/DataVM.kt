@@ -70,8 +70,10 @@ class DataVM @Inject constructor(
     val combinedInternalDataFlow = combine(
         internalSensorController.intAngleFromAlg1,
         internalSensorController.intAngleFromAlg2,
-    ) { intAngle1, intAngle2 ->
-        internalSensorData.InternalAngles(intAngle1 ?: 0.0f, intAngle2 ?: 0.0f)
+        internalSensorController.timeIntalg1,
+        internalSensorController.timeIntalg2
+    ) { intAngle1, intAngle2, timeInt1, timeInt2 ->
+        internalSensorData.InternalAngles(intAngle1, intAngle2, timeInt1,timeInt2)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
 //
@@ -343,6 +345,6 @@ sealed class CombinedPolarSensorData {
 }
 
 sealed class internalSensorData {
-    data class InternalAngles(val intAngle1: Float?, val intAngle2: Float?) : internalSensorData()
+    data class InternalAngles(val intAngle1: Float?, val intAngle2: Float?, val timeInt1: Long?,val timeInt2: Long?) : internalSensorData()
 }
 
