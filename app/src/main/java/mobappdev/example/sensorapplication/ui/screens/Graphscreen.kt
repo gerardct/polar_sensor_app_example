@@ -3,7 +3,6 @@ package mobappdev.example.sensorapplication.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -103,15 +101,23 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
     }
 
     val angle = combinedPolarSensorData?.angle1 ?: 0f
+    val angle2 = combinedPolarSensorData?.angle2 ?: 0f
     val time = combinedPolarSensorData?.time1 ?: 0L
     val internalAngle = combinedInternalSensorData?.intAngle1 ?: 0f
+    val internalAngle2 = combinedInternalSensorData?.intAngle2 ?: 0f
     val internalTime = combinedInternalSensorData?.timeInt1 ?: 0L
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Angle",
+                    text = "Angle 1",
+                    modifier = Modifier.padding(8.dp).align(Alignment.CenterHorizontally)
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Angle 2",
                     modifier = Modifier.padding(8.dp).align(Alignment.CenterHorizontally)
                 )
             }
@@ -128,7 +134,7 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "$angle",
+                    text = if (state.connected) "$angle" else "$internalAngle",
                     modifier = Modifier.padding(8.dp)
                 )
             }
@@ -137,7 +143,16 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "$time",
+                    text = if (state.connected) "$angle2" else "$internalAngle2",
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = if (state.connected) "$time" else "$internalTime",
                     modifier = Modifier.padding(8.dp)
                 )
             }
