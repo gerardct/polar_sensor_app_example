@@ -225,7 +225,7 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
                 .height(40.dp)
                 .width(100.dp)
         ) {
-            Text(text = "Export", fontSize = 14.sp)
+            Text(text = "Export ", fontSize = 14.sp)
         }
 
 
