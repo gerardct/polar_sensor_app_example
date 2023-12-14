@@ -214,7 +214,7 @@ class DataVM @Inject constructor(
 
     // this is for the recording of data:
     private var recordingStartedTimestamp: Long = 0
-    private val recordingDuration = 15 * 1000L // duration: 10 seconds
+    private val recordingDuration = 20 * 1000L // duration: 20 seconds
 
 
     fun startRecording() {
