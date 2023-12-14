@@ -35,30 +35,32 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
     val combinedPolarSensorData by combinedPolarSensorDataFlow.collectAsState()
     val combinedInternalSensorData by combinedInternalDataFlow.collectAsState()
 
-    var dataPoints by remember { mutableStateOf(emptyList<Pair<Long, Float>>()) }
-    var internalDataPoints by remember { mutableStateOf(emptyList<Pair<Long, Float>>()) }
+    var dataPoints by remember { mutableStateOf(emptyList<Pair<Float, Float>>()) }
+    var internalDataPoints by remember { mutableStateOf(emptyList<Pair<Float, Float>>()) }
 
 
     LaunchedEffect(Unit) {
         while (true) {
             val newDataPoint = when (val data = combinedPolarSensorData) {
                 is CombinedPolarSensorData.AngleData -> {
-                    Pair(System.currentTimeMillis(), data.angle1 ?: 0f) // Use angle1 or modify as needed
+                    Pair(data.time1 ?:0f , data.angle1 ?: 0f) // Use angle1 or modify as needed
                 }
                 // Handle other types of data or default case if needed
-                else -> Pair(System.currentTimeMillis(), 0f)
+                else -> Pair(0f, 0f)
             }
 
             val newDataPointInternal = when (val internalData = combinedInternalSensorData) {
                 is internalSensorData.InternalAngles -> {
-                    Pair(System.currentTimeMillis(), internalData.intAngle1 ?: 0f) // Use angle1 or modify as needed
+                    Pair(internalData.timeInt1 ?: 0f, internalData.intAngle1 ?: 0f) // Use angle1 or modify as needed
                 }
                 // Handle other types of internal data or default case if needed
-                else -> Pair(System.currentTimeMillis(), 0f)
+                else -> Pair(0f , 0f)
             }
 
             dataPoints = dataPoints + newDataPoint
             internalDataPoints = internalDataPoints + newDataPointInternal
+
+            internalDataPoints
 
             delay(5) // Wait for 0.005 second
         }
@@ -117,7 +119,7 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
 
 
 @Composable
-fun LineChartWithTimeData(dataPoints: List<Pair<Long, Float>>,  internalDataPoints: List<Pair<Long, Float>>, modifier: Modifier = Modifier) {
+fun LineChartWithTimeData(dataPoints: List<Pair<Float, Float>>,  internalDataPoints: List<Pair<Float, Float>>, modifier: Modifier = Modifier) {
     Canvas(modifier = modifier.fillMaxSize()) {
         val maxY = 90f
         val minY = 0f

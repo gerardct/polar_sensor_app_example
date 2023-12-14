@@ -26,10 +26,10 @@ interface PolarController {
     val angleFromAlg1list:StateFlow<List<Float>>
     val angleFromAlg2list:StateFlow<List<Float>>
 
-    val timealg1: StateFlow<Long?>
-    val timealg2: StateFlow<Long?>
-    val timealg1list: StateFlow<List<Long?>>
-    val timealg2list: StateFlow<List<Long?>>
+    val timealg1: StateFlow<Float?>
+    val timealg2: StateFlow<Float?>
+    val timealg1list: StateFlow<List<Float?>>
+    val timealg2list: StateFlow<List<Float?>>
 
     val connected: StateFlow<Boolean>
     val measuring: StateFlow<Boolean>

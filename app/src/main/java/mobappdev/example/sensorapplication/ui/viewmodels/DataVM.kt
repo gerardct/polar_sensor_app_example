@@ -317,11 +317,11 @@ data class DataUiState(
     // val accelerationList: List<Triple<Float, Float, Float>?> = emptyList(), // Define the type of data in the list
     val angleFromAlg1List: List<Float> = emptyList(),
     val angleFromAlg2List: List<Float> = emptyList(),
-    val timePolList: List<Long?> = emptyList(),
+    val timePolList: List<Float?> = emptyList(),
     val intAngleFromAlg1List: List<Float> = emptyList(),
     val intAngleFromAlg2List: List<Float> = emptyList(),
-    val timeIntAlg1List: List<Long?> = emptyList(),
-    val timeIntAlg2List: List<Long?> = emptyList(),
+    val timeIntAlg1List: List<Float?> = emptyList(),
+    val timeIntAlg2List: List<Float?> = emptyList(),
     val connected: Boolean = false,
     val measuring: Boolean = false
 )
@@ -341,10 +341,10 @@ sealed class CombinedSensorData {
 
 }
 sealed class CombinedPolarSensorData {
-    data class AngleData(val angle1: Float?, val angle2: Float?,val time1: Long?,val time2: Long?) : CombinedPolarSensorData()
+    data class AngleData(val angle1: Float?, val angle2: Float?,val time1: Float?,val time2: Float?) : CombinedPolarSensorData()
 }
 
 sealed class internalSensorData {
-    data class InternalAngles(val intAngle1: Float?, val intAngle2: Float?, val timeInt1: Long?,val timeInt2: Long?) : internalSensorData()
+    data class InternalAngles(val intAngle1: Float?, val intAngle2: Float?, val timeInt1: Float?,val timeInt2: Float?) : internalSensorData()
 }
 

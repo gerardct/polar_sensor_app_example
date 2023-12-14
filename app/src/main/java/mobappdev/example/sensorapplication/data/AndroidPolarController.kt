@@ -108,20 +108,20 @@ class AndroidPolarController(
     override val angleFromAlg2list: StateFlow<List<Float>>
         get() = _angleFromAlg2List.asStateFlow()
 
-    private val _timealg1 = MutableStateFlow<Long?>(null)
-    override val timealg1: StateFlow<Long?>
+    private val _timealg1 = MutableStateFlow<Float?>(null)
+    override val timealg1: StateFlow<Float?>
         get() = _timealg1.asStateFlow()
 
-    private val _timealg2 = MutableStateFlow<Long?>(null)
-    override val timealg2: StateFlow<Long?>
+    private val _timealg2 = MutableStateFlow<Float?>(null)
+    override val timealg2: StateFlow<Float?>
         get() = _timealg2.asStateFlow()
 
-    private val _timealg1list = MutableStateFlow<List<Long>>(emptyList())
-    override val timealg1list: StateFlow<List<Long>>
+    private val _timealg1list = MutableStateFlow<List<Float>>(emptyList())
+    override val timealg1list: StateFlow<List<Float>>
         get() = _timealg1list.asStateFlow()
 
-    private val _timealg2list = MutableStateFlow<List<Long>>(emptyList())
-    override val timealg2list: StateFlow<List<Long>>
+    private val _timealg2list = MutableStateFlow<List<Float>>(emptyList())
+    override val timealg2list: StateFlow<List<Float>>
         get() = _timealg2list.asStateFlow()
 
 
@@ -210,8 +210,8 @@ class AndroidPolarController(
     private fun handleAccData(accData: PolarAccelerometerData) {
         for (sample in accData.samples) {
             val timestamp = sample.timeStamp
-            _timealg1.update { timestamp }
-            _timealg1list.update { timealg1list -> timealg1list + timestamp }
+            _timealg1.update { timestamp / 1000.0f }
+            _timealg1list.update { timealg1list -> timealg1list + timestamp /1000.0f }
             val accelerationTriple = Triple(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
             _currentAcceleration.update { accelerationTriple }
             calculateAndApplyAngles() // Call here to calculate angles after receiving accelerometer data
@@ -221,8 +221,8 @@ class AndroidPolarController(
     private fun handleGyroData(gyroData: PolarGyroData) {
         for (sample in gyroData.samples) {
             val timestamp = sample.timeStamp
-            _timealg2.update { timestamp }
-            _timealg2list.update { timealg2list -> timealg2list + timestamp }
+            _timealg2.update { timestamp / 1000.0f }
+            _timealg2list.update { timealg2list -> timealg2list + timestamp /1000.0f }
             val gyroTriple = Triple(sample.x, sample.y, sample.z)
             _currentGyro.update { gyroTriple }
             calculateAndApplyAngles() // Call here to calculate angles after receiving gyroscope data
