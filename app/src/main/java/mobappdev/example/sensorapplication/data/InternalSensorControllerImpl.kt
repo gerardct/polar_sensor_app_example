@@ -91,20 +91,20 @@ class InternalSensorControllerImpl(
         get() = _intAngleFromAlg2List.asStateFlow()
 
     // for the recording of the data: (timestamp)
-    private val _timeIntalg1 = MutableStateFlow<Float?>(null)
-    override val timeIntalg1: StateFlow<Float?>
+    private val _timeIntalg1 = MutableStateFlow<Long>(0L)
+    override val timeIntalg1: StateFlow<Long>
         get() = _timeIntalg1.asStateFlow()
 
-    private val _timeIntalg2 = MutableStateFlow<Float?>(null)
-    override val timeIntalg2: StateFlow<Float?>
+    private val _timeIntalg2 = MutableStateFlow<Long>(0L)
+    override val timeIntalg2: StateFlow<Long>
         get() = _timeIntalg2.asStateFlow()
 
-    private val _timeIntalg1list = MutableStateFlow<List<Float>>(emptyList())
-    override val timeIntalg1list: StateFlow<List<Float>>
+    private val _timeIntalg1list = MutableStateFlow<List<Long>>(emptyList())
+    override val timeIntalg1list: StateFlow<List<Long>>
         get() = _timeIntalg1list.asStateFlow()
 
-    private val _timeIntalg2list = MutableStateFlow<List<Float>>(emptyList())
-    override val timeIntalg2list: StateFlow<List<Float>>
+    private val _timeIntalg2list = MutableStateFlow<List<Long>>(emptyList())
+    override val timeIntalg2list: StateFlow<List<Long>>
         get() = _timeIntalg2list.asStateFlow()
 
 
@@ -165,14 +165,14 @@ class InternalSensorControllerImpl(
 
             // Update timestamps when updating angles
             val timestamp = System.currentTimeMillis()
-            _timeIntalg1.update { timestamp / 1000.0f }
-            _timeIntalg1list.update { timeIntalg1list -> timeIntalg1list + timestamp / 1000.0f}
+            _timeIntalg1.update { timestamp  }
+            _timeIntalg1list.update { timeIntalg1list -> timeIntalg1list + timestamp }
 
             _intAngleFromAlg1.update { intAngleFromAlg1 }
 
             // Update timestamps when updating angles
-            _timeIntalg2.update { timestamp / 1000.0f}
-            _timeIntalg2list.update { timeIntalg2list -> timeIntalg2list + timestamp / 1000.0f}
+            _timeIntalg2.update { timestamp }
+            _timeIntalg2list.update { timeIntalg2list -> timeIntalg2list + timestamp }
 
             _intAngleFromAlg2.update { intAngleFromAlg2 }
 
@@ -317,8 +317,8 @@ class InternalSensorControllerImpl(
         //for (sample in _streamingLinAcc.sample)
         if (sensorEvent.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
             val timestamp = sensorEvent.timestamp // Convert nanoseconds to seconds
-            _timeIntalg1.update { timestamp / 1000.0f}
-            _timeIntalg1list.update { timeIntalg1list -> timeIntalg1list + timestamp / 1000.0f}
+            _timeIntalg1.update { timestamp }
+            _timeIntalg1list.update { timeIntalg1list -> timeIntalg1list + timestamp }
             val accelerationTriple = Triple(
                 sensorEvent.values[0],
                 sensorEvent.values[1],
@@ -333,8 +333,8 @@ class InternalSensorControllerImpl(
     private fun handleInternalGyroData(sensorEvent: SensorEvent) {
         if (sensorEvent.sensor.type == Sensor.TYPE_GYROSCOPE) {
             val timestamp = sensorEvent.timestamp  // Convert nanoseconds to seconds
-            _timeIntalg2.update { timestamp / 1000.0f}
-            _timeIntalg2list.update { timeIntalg2list -> timeIntalg2list + timestamp / 1000.0f}
+            _timeIntalg2.update { timestamp }
+            _timeIntalg2list.update { timeIntalg2list -> timeIntalg2list + timestamp }
 
             val gyroTriple = Triple(
                 sensorEvent.values[0],

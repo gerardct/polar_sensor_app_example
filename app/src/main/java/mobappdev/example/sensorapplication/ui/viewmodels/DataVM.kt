@@ -9,9 +9,12 @@ package mobappdev.example.sensorapplication.ui.viewmodels
  * Last modified: 2023-07-11
  */
 
+//import java.io.File // to be able to save the file
+import android.os.Environment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,19 +22,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
-import javax.inject.Inject
-
-import kotlinx.coroutines.delay
 import java.io.File
 import java.io.FileWriter
-import kotlinx.coroutines.launch
 import java.io.IOException
-//import java.io.File // to be able to save the file
-import android.content.Context
-import android.os.Environment
-
+import javax.inject.Inject
 
 
 @HiltViewModel
@@ -317,11 +314,11 @@ data class DataUiState(
     // val accelerationList: List<Triple<Float, Float, Float>?> = emptyList(), // Define the type of data in the list
     val angleFromAlg1List: List<Float> = emptyList(),
     val angleFromAlg2List: List<Float> = emptyList(),
-    val timePolList: List<Float?> = emptyList(),
+    val timePolList: List<Long> = emptyList(),
     val intAngleFromAlg1List: List<Float> = emptyList(),
     val intAngleFromAlg2List: List<Float> = emptyList(),
-    val timeIntAlg1List: List<Float?> = emptyList(),
-    val timeIntAlg2List: List<Float?> = emptyList(),
+    val timeIntAlg1List: List<Long> = emptyList(),
+    val timeIntAlg2List: List<Long> = emptyList(),
     val connected: Boolean = false,
     val measuring: Boolean = false
 )
@@ -341,10 +338,10 @@ sealed class CombinedSensorData {
 
 }
 sealed class CombinedPolarSensorData {
-    data class AngleData(val angle1: Float?, val angle2: Float?,val time1: Float?,val time2: Float?) : CombinedPolarSensorData()
+    data class AngleData(val angle1: Float?, val angle2: Float?,val time1: Long,val time2: Long) : CombinedPolarSensorData()
 }
 
 sealed class internalSensorData {
-    data class InternalAngles(val intAngle1: Float?, val intAngle2: Float?, val timeInt1: Float?,val timeInt2: Float?) : internalSensorData()
+    data class InternalAngles(val intAngle1: Float?, val intAngle2: Float?, val timeInt1: Long,val timeInt2: Long) : internalSensorData()
 }
 
