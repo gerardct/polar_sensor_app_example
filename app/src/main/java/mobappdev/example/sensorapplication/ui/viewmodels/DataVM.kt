@@ -216,7 +216,6 @@ class DataVM @Inject constructor(
     private var recordingStartedTimestamp: Long = 0
     private val recordingDuration = 20 * 1000L // duration: 20 seconds
 
-
     fun startRecording() {
         // start recording logic
         if (!_recordingInProgress.value) {
