@@ -31,13 +31,17 @@ import java.io.IOException
 //import java.io.File // to be able to save the file
 import android.content.Context
 import android.os.Environment
-
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
+import mobappdev.example.sensorapplication.SensorApp
+import mobappdev.example.sensorapplication.ui.screens.Database
 
 
 @HiltViewModel
 class DataVM @Inject constructor(
     private val polarController: PolarController,
-    private val internalSensorController: InternalSensorController
+    private val internalSensorController: InternalSensorController,
+    private val database: Database
 ): ViewModel() {
 
     private val gyroDataFlow = internalSensorController.currentGyroUI
@@ -203,7 +207,7 @@ class DataVM @Inject constructor(
 
 
 
-    // New state to track whether recording is in progress
+    //  state to track whether recording is in progress
     private val _recordingInProgress = MutableStateFlow(false)
     val recordingInProgress: StateFlow<Boolean>
         get() = _recordingInProgress.asStateFlow()
@@ -212,7 +216,7 @@ class DataVM @Inject constructor(
     private var recordingStartedTimestamp: Long = 0
     private val recordingDuration = 10 * 1000L // duration: 10 seconds
 
-    // todo: implement start Recroding function after pressing some button
+
     fun startRecording() {
         // start recording logic
         if (!_recordingInProgress.value) {
@@ -233,8 +237,13 @@ class DataVM @Inject constructor(
                 }
             }
         }
-        // save measurements to a local database (different view to display the results)
+        // save measurements to a LOCAL DATABASE (different view to display the results)
+
+
+
+
     }
+
 
     fun stopRecording() {
         if (_recordingInProgress.value) {
@@ -248,6 +257,19 @@ class DataVM @Inject constructor(
 
             // Export data after stopping recording
             saveCSVToFile()
+
+            // Insert data to the database
+            insertDataToDatabase(
+                System.currentTimeMillis(),
+                polarController.angleFromAlg1list.value.lastOrNull(),
+                polarController.angleFromAlg2list.value.lastOrNull(),
+                internalSensorController.intAngleFromAlg1List.value.lastOrNull(),
+                internalSensorController.intAngleFromAlg2List.value.lastOrNull(),
+                polarController.timealg1list.value.lastOrNull(),
+                polarController.timealg2list.value.lastOrNull(),
+                internalSensorController.timeIntalg1list.value.lastOrNull(),
+                internalSensorController.timeIntalg2list.value.lastOrNull()
+            )
         }
     }
 
@@ -310,6 +332,44 @@ class DataVM @Inject constructor(
     }
 
 
+
+
+
+
+
+
+    // Function to insert data into the database
+    private fun insertDataToDatabase(
+        timestamp: Long,
+        polarAlg1: Float?,
+        polarAlg2: Float?,
+        internalAlg1: Float?,
+        internalAlg2: Float?,
+        timeAlg1: Long?,
+        timeAlg2: Long?,
+        timeIntAlg1: Long?,
+        timeIntAlg2: Long?
+    ) {
+        viewModelScope.launch {
+            database.insertData(
+                timestamp,
+                polarAlg1,
+                polarAlg2,
+                internalAlg1,
+                internalAlg2,
+                timeAlg1,
+                timeAlg2,
+                timeIntAlg1,
+                timeIntAlg2
+            )
+        }
+    }
+
+
+
+
+
+
 }
 
 data class DataUiState(
@@ -325,6 +385,8 @@ data class DataUiState(
     val connected: Boolean = false,
     val measuring: Boolean = false
 )
+
+
 
 
 
@@ -347,4 +409,6 @@ sealed class CombinedPolarSensorData {
 sealed class internalSensorData {
     data class InternalAngles(val intAngle1: Float?, val intAngle2: Float?, val timeInt1: Long,val timeInt2: Long) : internalSensorData()
 }
+
+
 
