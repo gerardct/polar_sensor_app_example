@@ -191,7 +191,6 @@ class InternalSensorControllerImpl(
 
 
 
-
     // ALGORITHM 1: compute angle of elevation
     private var lastFilteredAngle: Float = -40.0f// Start with 0 degrees when parallel to the ground
     private val alpha: Float = 0.4f // filter factor
