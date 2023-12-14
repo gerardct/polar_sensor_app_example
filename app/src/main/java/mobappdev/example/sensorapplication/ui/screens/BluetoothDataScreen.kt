@@ -211,7 +211,7 @@ fun BluetoothDataScreen(
                     vm.startRecording()
                     navController.navigate("Graphscreen")
                 }, // Navigate to Graphscreen,
-                enabled = (state.connected && !state.measuring),
+                enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
