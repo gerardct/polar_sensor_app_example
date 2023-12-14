@@ -60,7 +60,7 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
     LaunchedEffect(Unit) {
         val startTime = System.currentTimeMillis()
 
-        while (System.currentTimeMillis() - startTime < 10000) {
+        while (System.currentTimeMillis() - startTime < 15000) {
             val newDataPoint: Pair<Long, Float> = if (state.connected && state.measuring) {
                 when (val data = combinedPolarSensorData) {
                     is CombinedPolarSensorData.AngleData -> {
@@ -123,6 +123,17 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
     val internalTime = combinedInternalSensorData?.timeInt1 ?: 0L
 
     Column(modifier = Modifier.fillMaxSize()) {
+        Button(
+            onClick = {
+                navController.popBackStack() // Navigate back to the previous screen
+            },
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
+            Text(text = "Back to Main Screen")
+        }
+
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
