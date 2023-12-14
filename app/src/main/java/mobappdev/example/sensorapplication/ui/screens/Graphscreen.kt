@@ -58,7 +58,9 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
 
 
     LaunchedEffect(Unit) {
-        while (true) {
+        val startTime = System.currentTimeMillis()
+
+        while (System.currentTimeMillis() - startTime < 10000) {
             val newDataPoint: Pair<Long, Float> = if (state.connected && state.measuring) {
                 when (val data = combinedPolarSensorData) {
                     is CombinedPolarSensorData.AngleData -> {
