@@ -175,7 +175,7 @@ class Database @Inject constructor (@ApplicationContext context: Context) : SQLi
 
 }
 
-data class DataItem(val timestamp: Long) {
+data class DataItem @Inject constructor(val timestamp: Long) {
     private val columnValues = mutableMapOf<String, Any>()
 
     fun setColumnValue(columnName: String, value: Any) {
