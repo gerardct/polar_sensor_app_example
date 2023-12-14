@@ -226,7 +226,7 @@ class DataVM @Inject constructor(
                 while (_recordingInProgress.value) {
                     val elapsedTime = System.currentTimeMillis() - recordingStartedTimestamp
                     if (elapsedTime >= recordingDuration) {
-                        // Stop recording after 10 seconds
+                        // Stop recording after 20 seconds
                         stopRecording()
                         break
                     }

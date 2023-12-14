@@ -56,6 +56,7 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
     var internalDataPoints by remember { mutableStateOf(emptyList<Pair<Long, Float>>()) }
     var internalDataPoints2 by remember { mutableStateOf(emptyList<Pair<Long, Float>>()) }
 
+
     LaunchedEffect(Unit) {
         val startTime = System.currentTimeMillis()
 
