@@ -8,8 +8,6 @@ package mobappdev.example.sensorapplication.ui.screens
  * Last modified: 2023-07-11
  */
 
-import android.util.Log
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,32 +18,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import mobappdev.example.sensorapplication.ui.viewmodels.CombinedSensorData
+import androidx.navigation.NavController
 import mobappdev.example.sensorapplication.ui.viewmodels.CombinedPolarSensorData
+import mobappdev.example.sensorapplication.ui.viewmodels.CombinedSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 import mobappdev.example.sensorapplication.ui.viewmodels.internalSensorData
-import androidx.compose.runtime.*
-import androidx.navigation.NavController
-import java.io.File
 
 
 @Composable
@@ -156,15 +151,12 @@ fun BluetoothDataScreen(
     ) {
         Text(text = if (state.connected) "Polar sense connected" else "Internal sensors connected")
         Box(
-            contentAlignment = Center,
+            contentAlignment = Alignment.Center,
             modifier = Modifier.weight(1f)
         ) {
-            Text(
-                text = if(state.measuring) value else "-",
-                fontSize = if (value.length < 3) 128.sp else 40.sp,
-                color = Color.Black,
-            )
+
         }
+
         Text(text = "Select sensor:")
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -236,20 +228,9 @@ fun BluetoothDataScreen(
 
     }
 
-@Composable
-fun DisplayCSVFiles(files: List<File>, onFileClicked: (File) -> Unit) {
-    LazyColumn {
-        items(files.size) { index ->
-            val file = files[index]
-            Text(
-                text = file.name,
-                modifier = Modifier
-                    .clickable { onFileClicked(file) }
-                    .padding(8.dp)
-            )
-        }
-    }
-}
+
+
+
 
 
 

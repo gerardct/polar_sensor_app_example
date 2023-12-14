@@ -126,7 +126,7 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
         Button(
             onClick = {
                 navController.popBackStack()
-                      vm.stopRecording()// Navigate back to the previous screen
+                vm.stopRecording() // Navigate back to the previous screen
             },
             modifier = Modifier
                 .padding(16.dp)
@@ -152,14 +152,7 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
                         .align(Alignment.CenterHorizontally)
                 )
             }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Time",
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .align(Alignment.CenterHorizontally)
-                )
-            }
+            // Remove the Column for time text
         }
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(
@@ -180,15 +173,7 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
                     modifier = Modifier.padding(8.dp)
                 )
             }
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = if (state.connected) "$time" else "$internalTime",
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
+            // Remove the Column for time text
         }
         Column(modifier = Modifier.weight(1f)) {
             LineChartWithTimeData(

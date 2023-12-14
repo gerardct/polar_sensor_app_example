@@ -11,9 +11,7 @@ package mobappdev.example.sensorapplication.ui.viewmodels
 
 //import java.io.File // to be able to save the file
 import android.os.Environment
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -256,15 +254,15 @@ class DataVM @Inject constructor(
             saveCSVToFile()
 
             // Insert data to the database
-            insertDataToDatabase(
-                state.value.angleFromAlg1List,
-                state.value.angleFromAlg2List,
-                state.value.intAngleFromAlg1List,
-                state.value.intAngleFromAlg2List,
-                state.value.time1PolList,
-                state.value.timeIntAlg1List,
-                state.value.timeIntAlg2List
-            )
+            //insertDataToDatabase(
+                //state.value.angleFromAlg1List,
+                //state.value.angleFromAlg2List,
+                //state.value.intAngleFromAlg1List,
+                //state.value.intAngleFromAlg2List,
+                //state.value.time1PolList,
+                //state.value.timeIntAlg1List,
+                //tate.value.timeIntAlg2List
+            //)
         }
     }
 

@@ -160,9 +160,28 @@ class Database @Inject constructor (@ApplicationContext context: Context) : SQLi
             cursor.close()
         }
         return dataList
-
     }
+    fun getAllTables(): List<String> {
+        val tableNames = mutableListOf<String>()
 
+        val db = readableDatabase
+        val cursor: Cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null)
+
+        try {
+            while (cursor.moveToNext()) {
+                val tableName = cursor.getString(0)
+                if (tableName != "android_metadata" && tableName != "sqlite_sequence") {
+                    tableNames.add(tableName)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            cursor.close()
+        }
+
+        return tableNames
+    }
 
 
 
