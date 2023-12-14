@@ -286,12 +286,6 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
 
                 canvas.nativeCanvas.drawText("0", 0f, size.height, paint)
                 canvas.nativeCanvas.drawText("90", 0f, 16.dp.toPx(), paint)
-                canvas.nativeCanvas.drawText(
-                    "Time",
-                    size.width / 2,
-                    size.height - 24.dp.toPx(),
-                    paint
-                )
             }
 
             drawPath(path = path, color = Color.Blue, style = Stroke(width = 4.dp.toPx()))
