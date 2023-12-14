@@ -10,6 +10,8 @@ import javax.inject.Inject
 
 //import dagger.hilt.android.scopes.SingletonComponent
 import javax.inject.Singleton
+import com.google.gson.Gson
+
 
 @Singleton
 class Database @Inject constructor (@ApplicationContext context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -21,13 +23,11 @@ class Database @Inject constructor (@ApplicationContext context: Context) : SQLi
 
         // Define table columns
         const val COLUMN_ID = "id"
-        const val COLUMN_TIMESTAMP = "timestamp"
         const val COLUMN_POLAR_ALG1 = "polar_alg1"
         const val COLUMN_POLAR_ALG2 = "polar_alg2"
         const val COLUMN_INTERNAL_ALG1 = "internal_alg1"
         const val COLUMN_INTERNAL_ALG2 = "internal_alg2"
         const val COLUMN_TIME_ALG1 = "time_alg1"
-        const val COLUMN_TIME_ALG2 = "time_alg2"
         const val COLUMN_TIME_INT_ALG1 = "time_int_alg1"
         const val COLUMN_TIME_INT_ALG2 = "time_int_alg2"
     }
@@ -37,13 +37,11 @@ class Database @Inject constructor (@ApplicationContext context: Context) : SQLi
         val createTableQuery = """
             CREATE TABLE $TABLE_NAME (
                 $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                $COLUMN_TIMESTAMP INTEGER,
                 $COLUMN_POLAR_ALG1 REAL,
                 $COLUMN_POLAR_ALG2 REAL,
                 $COLUMN_INTERNAL_ALG1 REAL,
                 $COLUMN_INTERNAL_ALG2 REAL,
                 $COLUMN_TIME_ALG1 INTEGER,
-                $COLUMN_TIME_ALG2 INTEGER,
                 $COLUMN_TIME_INT_ALG1 INTEGER,
                 $COLUMN_TIME_INT_ALG2 INTEGER
             )
@@ -60,28 +58,24 @@ class Database @Inject constructor (@ApplicationContext context: Context) : SQLi
 
     // Function to insert data into the database
     fun insertData(
-        timestamp: Long,
-        polarAlg1: Float?,
-        polarAlg2: Float?,
-        internalAlg1: Float?,
-        internalAlg2: Float?,
-        timeAlg1: Long?,
-        timeAlg2: Long?,
-        timeIntAlg1: Long?,
-        timeIntAlg2: Long?
+        polarAlg1: List<Float?>,
+        polarAlg2: List<Float?>,
+        internalAlg1: List<Float?>,
+        internalAlg2: List<Float?>,
+        timeAlg1: List<Long?>,
+        timeIntAlg1: List<Long?>,
+        timeIntAlg2: List<Long?>
     ) {
         val db = writableDatabase
 
         val values = ContentValues()
-        values.put(COLUMN_TIMESTAMP, timestamp)
-        values.put(COLUMN_POLAR_ALG1, polarAlg1)
-        values.put(COLUMN_POLAR_ALG2, polarAlg2)
-        values.put(COLUMN_INTERNAL_ALG1, internalAlg1)
-        values.put(COLUMN_INTERNAL_ALG2, internalAlg2)
-        values.put(COLUMN_TIME_ALG1, timeAlg1)
-        values.put(COLUMN_TIME_ALG2, timeAlg2)
-        values.put(COLUMN_TIME_INT_ALG1, timeIntAlg1)
-        values.put(COLUMN_TIME_INT_ALG2, timeIntAlg2)
+        values.put(COLUMN_POLAR_ALG1, Gson().toJson(polarAlg1))
+        values.put(COLUMN_POLAR_ALG2, Gson().toJson(polarAlg2))
+        values.put(COLUMN_INTERNAL_ALG1, Gson().toJson(internalAlg1))
+        values.put(COLUMN_INTERNAL_ALG2, Gson().toJson(internalAlg2))
+        values.put(COLUMN_TIME_ALG1, Gson().toJson(timeAlg1))
+        values.put(COLUMN_TIME_INT_ALG1, Gson().toJson(timeIntAlg1))
+        values.put(COLUMN_TIME_INT_ALG2, Gson().toJson(timeIntAlg2))
 
         // Insert the new row, returning the primary key value of the new row
         db.insert(TABLE_NAME, null, values)
@@ -100,7 +94,7 @@ class Database @Inject constructor (@ApplicationContext context: Context) : SQLi
 
         try {
             while (cursor.moveToNext()) {
-                val timestampIndex = cursor.getColumnIndex(COLUMN_TIMESTAMP)
+                val timestampIndex = cursor.getColumnIndex(COLUMN_POLAR_ALG1)
 
                 if (timestampIndex >= 0) {
                     val timestamp = cursor.getLong(timestampIndex)
@@ -137,10 +131,6 @@ class Database @Inject constructor (@ApplicationContext context: Context) : SQLi
                         dataItem.setColumnValue(COLUMN_TIME_ALG1, cursor.getLong(timeAlg1Index))
                     }
 
-                    val timeAlg2Index = cursor.getColumnIndex(COLUMN_TIME_ALG2)
-                    if (timeAlg2Index >= 0) {
-                        dataItem.setColumnValue(COLUMN_TIME_ALG2, cursor.getLong(timeAlg2Index))
-                    }
 
                     val timeIntAlg1Index = cursor.getColumnIndex(COLUMN_TIME_INT_ALG1)
                     if (timeIntAlg1Index >= 0) {

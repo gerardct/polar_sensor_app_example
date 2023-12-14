@@ -257,15 +257,13 @@ class DataVM @Inject constructor(
 
             // Insert data to the database
             insertDataToDatabase(
-                System.currentTimeMillis(),
-                polarController.angleFromAlg1list.value.lastOrNull(),
-                polarController.angleFromAlg2list.value.lastOrNull(),
-                internalSensorController.intAngleFromAlg1List.value.lastOrNull(),
-                internalSensorController.intAngleFromAlg2List.value.lastOrNull(),
-                polarController.timealg1list.value.lastOrNull(),
-                polarController.timealg2list.value.lastOrNull(),
-                internalSensorController.timeIntalg1list.value.lastOrNull(),
-                internalSensorController.timeIntalg2list.value.lastOrNull()
+                state.value.angleFromAlg1List,
+                state.value.angleFromAlg2List,
+                state.value.intAngleFromAlg1List,
+                state.value.intAngleFromAlg2List,
+                state.value.time1PolList,
+                state.value.timeIntAlg1List,
+                state.value.timeIntAlg2List
             )
         }
     }
@@ -327,36 +325,26 @@ class DataVM @Inject constructor(
 
     // Function to insert data into the database
     private fun insertDataToDatabase(
-        timestamp: Long,
-        polarAlg1: Float?,
-        polarAlg2: Float?,
-        internalAlg1: Float?,
-        internalAlg2: Float?,
-        timeAlg1: Long?,
-        timeAlg2: Long?,
-        timeIntAlg1: Long?,
-        timeIntAlg2: Long?
+        polarAlg1: List<Float?>,
+        polarAlg2: List<Float?>,
+        internalAlg1: List<Float?>,
+        internalAlg2: List<Float?>,
+        timeAlg1: List<Long?>,
+        timeIntAlg1: List<Long?>,
+        timeIntAlg2: List<Long?>
     ) {
         viewModelScope.launch {
             database.insertData(
-                timestamp,
                 polarAlg1,
                 polarAlg2,
                 internalAlg1,
                 internalAlg2,
                 timeAlg1,
-                timeAlg2,
                 timeIntAlg1,
                 timeIntAlg2
             )
         }
     }
-
-
-
-
-
-
 }
 
 data class DataUiState(
@@ -367,8 +355,8 @@ data class DataUiState(
     val time1PolList: List<Long> = emptyList(),
     val intAngleFromAlg1List: List<Float> = emptyList(),
     val intAngleFromAlg2List: List<Float> = emptyList(),
-    val timeIntAlg1List: List<Float?> = emptyList(),
-    val timeIntAlg2List: List<Float?> = emptyList(),
+    val timeIntAlg1List: List<Long?> = emptyList(),
+    val timeIntAlg2List: List<Long?> = emptyList(),
     val connected: Boolean = false,
     val measuring: Boolean = false
 )

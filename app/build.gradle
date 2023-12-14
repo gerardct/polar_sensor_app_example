@@ -53,6 +53,7 @@ dependencies {
     implementation 'com.github.polarofficial:polar-ble-sdk:5.1.0'
     implementation 'io.reactivex.rxjava3:rxjava:3.1.6'
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
+    implementation 'com.google.code.gson:gson:2.8.8' // Or the latest version available
 
     // Bluetooth Scanning
     implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
