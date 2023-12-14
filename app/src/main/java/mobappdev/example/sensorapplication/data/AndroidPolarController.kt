@@ -207,11 +207,23 @@ class AndroidPolarController(
         _currentHR.update { null }
     }
 
+    var startTime: Long? = 0L // Initialize the start time as nullable outside the loop
+
     private fun handleAccData(accData: PolarAccelerometerData) {
         for (sample in accData.samples) {
-            val timestamp = sample.timeStamp
-            _timealg1.update { timestamp }
-            _timealg1list.update { timealg1list -> timealg1list + timestamp }
+            if (startTime == 0L) {
+                startTime = System.currentTimeMillis() // Set the start time with the current time in milliseconds
+            }
+
+            // Calculate the elapsed time in milliseconds since the start time
+                val elapsedTime = System.currentTimeMillis() - (startTime ?: 0L)
+
+            // Update _timealg1list with the elapsed time
+            _timealg1list.update { timealg1list -> timealg1list + elapsedTime }
+
+            // Set the elapsed time as the updated value for _timealg1
+            _timealg1.update { elapsedTime }
+
             val accelerationTriple = Triple(sample.x.toFloat(), sample.y.toFloat(), sample.z.toFloat())
             _currentAcceleration.update { accelerationTriple }
             calculateAndApplyAngles() // Call here to calculate angles after receiving accelerometer data

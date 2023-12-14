@@ -125,7 +125,8 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
     Column(modifier = Modifier.fillMaxSize()) {
         Button(
             onClick = {
-                navController.popBackStack() // Navigate back to the previous screen
+                navController.popBackStack()
+                      vm.stopRecording()// Navigate back to the previous screen
             },
             modifier = Modifier
                 .padding(16.dp)

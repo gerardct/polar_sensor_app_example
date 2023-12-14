@@ -138,6 +138,8 @@ class InternalSensorControllerImpl(
         }
     }
 
+    var startTimeIntAlg1: Long? = null // Initialize the start time for _timeIntalg1 as nullable outside the loop
+    var startTimeIntAlg2: Long? = null // Initialize the start time for _timeIntalg2 as nullable outside the loop
 
     override fun applyAngleOfElevation () {
         val intAcc = _currentLinAccUI.value
@@ -163,18 +165,37 @@ class InternalSensorControllerImpl(
             _intAngleFromAlg1List.update { list -> list + intAngleFromAlg1 }
             _intAngleFromAlg2List.update { list -> list + intAngleFromAlg2 }
 
-            // Update timestamps when updating angles
-            val timestamp = System.currentTimeMillis()
-            _timeIntalg1.update { timestamp  }
-            _timeIntalg1list.update { timeIntalg1list -> timeIntalg1list + timestamp }
+            val timestamp = System.currentTimeMillis() // Get the current time in milliseconds
 
-            _intAngleFromAlg1.update { intAngleFromAlg1 }
+            // For _timeIntalg1
+            if (startTimeIntAlg1 == null) {
+                startTimeIntAlg1 = timestamp // Set the start time for _timeIntalg1 with the first timestamp
+            }
 
-            // Update timestamps when updating angles
-            _timeIntalg2.update { timestamp }
-            _timeIntalg2list.update { timeIntalg2list -> timeIntalg2list + timestamp }
+            val elapsedTimeIntAlg1 = timestamp - (startTimeIntAlg1 ?: 0L) // Calculate elapsed time for _timeIntalg1
 
-            _intAngleFromAlg2.update { intAngleFromAlg2 }
+            // Update _timeIntalg1list with elapsed time
+            _timeIntalg1list.update { timeIntalg1list -> timeIntalg1list + elapsedTimeIntAlg1 }
+
+            // Set elapsed time as updated value for _timeIntalg1
+            _timeIntalg1.update { elapsedTimeIntAlg1 }
+
+            _intAngleFromAlg1.update { intAngleFromAlg1 } // Update _intAngleFromAlg1
+
+            // For _timeIntalg2
+            if (startTimeIntAlg2 == null) {
+                startTimeIntAlg2 = timestamp // Set the start time for _timeIntalg2 with the first timestamp
+            }
+
+            val elapsedTimeIntAlg2 = timestamp - (startTimeIntAlg2 ?: 0L) // Calculate elapsed time for _timeIntalg2
+
+            // Update _timeIntalg2list with elapsed time
+            _timeIntalg2list.update { timeIntalg2list -> timeIntalg2list + elapsedTimeIntAlg2 }
+
+            // Set elapsed time as updated value for _timeIntalg2
+            _timeIntalg2.update { elapsedTimeIntAlg2 }
+
+            _intAngleFromAlg2.update { intAngleFromAlg2 } // Update _intAngleFromAlg2
 
             // Introduce a delay before updating the angle display
            // GlobalScope.launch(Dispatchers.Main) {

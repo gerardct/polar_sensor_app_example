@@ -309,27 +309,20 @@ class DataVM @Inject constructor(
     }
 
     fun createCsvFile(): File {
-       // val directoryPath = "/storage/emulated/0/files" // change directory
-        //val directory = getExternalFilesDir(null)  // This gets the external storage directory for your app
+        val timestamp = System.currentTimeMillis() // Generate a timestamp
+        val fileName = "Lab1_3_sensor_data_$timestamp.csv" // Append timestamp to the file name
 
         val downloadsDir = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "Lab1_3_sensor_data.csv"
+            fileName
         )
 
         if (!downloadsDir.parentFile.exists()) {
             downloadsDir.parentFile.mkdirs()
         }
 
-        //val fileName = "Lab1_3_sensor_data.csv"
-        return downloadsDir //File(directory, fileName)
+        return downloadsDir
     }
-
-
-
-
-
-
 
 
     // Function to insert data into the database
