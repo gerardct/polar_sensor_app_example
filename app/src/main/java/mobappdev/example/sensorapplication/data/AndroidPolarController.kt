@@ -100,12 +100,12 @@ class AndroidPolarController(
     override val angleFromAlg2: StateFlow<Float?>
         get() = _angleFromAlg2.asStateFlow()
 
-    private val _angleFromAlg1List = MutableStateFlow<List<Float>>(emptyList())
-    override val angleFromAlg1list: StateFlow<List<Float>>
+    private val _angleFromAlg1List = MutableStateFlow<List<Float?>>(emptyList())
+    override val angleFromAlg1list: StateFlow<List<Float?>>
         get() = _angleFromAlg1List.asStateFlow()
 
-    private val _angleFromAlg2List = MutableStateFlow<List<Float>>(emptyList())
-    override val angleFromAlg2list: StateFlow<List<Float>>
+    private val _angleFromAlg2List = MutableStateFlow<List<Float?>>(emptyList())
+    override val angleFromAlg2list: StateFlow<List<Float?>>
         get() = _angleFromAlg2List.asStateFlow()
 
     private val _timealg1 = MutableStateFlow<Long>(0L)
@@ -301,8 +301,8 @@ class AndroidPolarController(
             _angleFromAlg1.update { angleFromAlg1 }
             _angleFromAlg2.update { angleFromAlg2 }
 
-            _angleFromAlg1List.update { list -> list + angleFromAlg1 }
-            _angleFromAlg2List.update { list -> list + angleFromAlg2 }
+            _angleFromAlg1List.update { angleFromAlg1List -> angleFromAlg1List + angleFromAlg1 }
+            _angleFromAlg2List.update { angleFromAlg2List -> angleFromAlg2List + angleFromAlg2 }
 
             // Use the calculated angles as needed
             // For example, you can update UI elements or perform further processing

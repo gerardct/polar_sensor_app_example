@@ -211,7 +211,8 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
         ) {
             Button(
                 onClick = {
-                    vm.stopDataStream()},
+                    vm.stopDataStream()
+                          vm.stopRecording()},
                 enabled = state.measuring,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary
