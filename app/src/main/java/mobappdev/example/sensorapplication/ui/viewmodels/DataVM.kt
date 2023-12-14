@@ -9,9 +9,14 @@ package mobappdev.example.sensorapplication.ui.viewmodels
  * Last modified: 2023-07-11
  */
 
+//import java.io.File // to be able to save the file
+import android.os.Environment
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,22 +24,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
-import javax.inject.Inject
-
-import kotlinx.coroutines.delay
+import mobappdev.example.sensorapplication.ui.screens.Database
 import java.io.File
 import java.io.FileWriter
-import kotlinx.coroutines.launch
 import java.io.IOException
-//import java.io.File // to be able to save the file
-import android.content.Context
-import android.os.Environment
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
-import mobappdev.example.sensorapplication.SensorApp
-import mobappdev.example.sensorapplication.ui.screens.Database
+import javax.inject.Inject
 
 
 @HiltViewModel
@@ -82,7 +79,7 @@ class DataVM @Inject constructor(
 
 //
 
-
+//AIXO NO FA RES
     val combinedDataFlow = combine(
         gyroDataFlow,
         linAccDataFlow,
@@ -99,6 +96,7 @@ class DataVM @Inject constructor(
             else -> null
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+//
 
     private val _state = MutableStateFlow(DataUiState())
 
@@ -113,7 +111,7 @@ class DataVM @Inject constructor(
         state.copy(
             angleFromAlg1List = angleFromAlg1List,
             angleFromAlg2List = angleFromAlg2List,
-            timePolList = time1list,
+            time1PolList = time1list,
             connected = connected
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
@@ -280,30 +278,27 @@ class DataVM @Inject constructor(
         try {
             FileWriter(csvFile).use { writer ->
                 // Write data to the CSV file
-                val polarAlg1List = polarController.angleFromAlg1list.value
-                val polarAlg2List = polarController.angleFromAlg2list.value
-                val internalAlg1List = internalSensorController.intAngleFromAlg1List.value
-                val internalAlg2List = internalSensorController.intAngleFromAlg2List.value
-                val timeAlg1List = polarController.timealg1list.value
-                val timeAlg2List = polarController.timealg2list.value
-                val timeIntAlg1List = internalSensorController.timeIntalg1list.value
-                val timeIntAlg2List = internalSensorController.timeIntalg2list.value
+                val polarAlg1List = state.value.angleFromAlg1List
+                val polarAlg2List =state.value.angleFromAlg2List
+                val internalAlg1List = state.value.intAngleFromAlg1List
+                val internalAlg2List = state.value.intAngleFromAlg2List
+                val time1Pollist = state.value.time1PolList
+                val timeIntAlg1List = state.value.timeIntAlg1List
+                val timeIntAlg2List = state.value.timeIntAlg2List
 
                 // Write header to the CSV file
-                writer.append("Timestamp, Polar Alg1, Polar Alg2, Internal Alg1, Internal Alg2, Time Alg1, Time Alg2, Time Int Alg1, Time Int Alg2\n")
+                writer.append("Polar Alg1, Polar Alg2, Internal Alg1, Internal Alg2, Time Polar, Time Int Alg1, Time Int Alg2\n")
 
-                for (i in timeIntAlg1List.indices){
-                    val timestamp = timeIntAlg1List[i]
+                for (i in polarAlg1List.indices){
                     val polarAlg1 = polarAlg1List.getOrNull(i) ?: 0.0
                     val polarAlg2 = polarAlg2List.getOrNull(i) ?: 0.0
                     val internalAlg1 = internalAlg1List.getOrNull(i) ?: 0.0
                     val internalAlg2 = internalAlg2List.getOrNull(i) ?: 0.0
-                    val timeAlg1 = timeAlg1List.getOrNull(i) ?: 0L
-                    val timeAlg2 = timeAlg2List.getOrNull(i) ?: 0L
-                    val timeIntAlg1 = timeIntAlg1List[i] ?: 0L
-                    val timeIntAlg2 = timeIntAlg2List[i] ?: 0L
+                    val timeAlg1 = time1Pollist.getOrNull(i) ?: 0L
+                    val timeIntAlg1 = timeIntAlg1List.getOrNull(i) ?: 0L
+                    val timeIntAlg2 = timeIntAlg2List.getOrNull(i) ?: 0L
 
-                    writer.append("$timestamp, $polarAlg1, $polarAlg2, $internalAlg1, $internalAlg2, $timeAlg1, $timeAlg2, $timeIntAlg1, $timeIntAlg2\n")
+                    writer.append("$polarAlg1, $polarAlg2, $internalAlg1, $internalAlg2, $timeAlg1, $timeIntAlg1, $timeIntAlg2\n")
                 }
             }
             // File saved successfully
@@ -374,9 +369,9 @@ class DataVM @Inject constructor(
 data class DataUiState(
    // val hrList: List<Int> = emptyList(),
     // val accelerationList: List<Triple<Float, Float, Float>?> = emptyList(), // Define the type of data in the list
-    val angleFromAlg1List: List<Float> = emptyList(),
-    val angleFromAlg2List: List<Float> = emptyList(),
-    val timePolList: List<Long> = emptyList(),
+    val angleFromAlg1List: List<Float?> = emptyList(),
+    val angleFromAlg2List: List<Float?> = emptyList(),
+    val time1PolList: List<Long> = emptyList(),
     val intAngleFromAlg1List: List<Float> = emptyList(),
     val intAngleFromAlg2List: List<Float> = emptyList(),
     val timeIntAlg1List: List<Float?> = emptyList(),
