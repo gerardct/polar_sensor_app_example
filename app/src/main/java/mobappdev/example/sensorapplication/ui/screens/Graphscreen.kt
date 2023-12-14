@@ -3,6 +3,7 @@ package mobappdev.example.sensorapplication.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,10 +18,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
@@ -161,11 +167,16 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
             LineChartWithTimeData(
                 dataPoints = if (state.connected) dataPoints else internalDataPoints,
                 modifier = Modifier
-                    .fillMaxWidth() // Adjust scaleX for wider display
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.5f) // Chart fills half of the available height
+// Adjust scaleX for wider display
             )
             LineChartWithTimeData(
                 dataPoints = if (state.connected) dataPoints2 else internalDataPoints2,
-                modifier = Modifier.fillMaxWidth() // Chart fills the entire width
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.5f) // Chart fills half of the available height
+// Chart fills the entire width
             )
         }
 
@@ -198,6 +209,18 @@ fun LineChartWithTimeData(dataPoints: List<Pair<Long, Float>>, modifier: Modifie
                     size.height - ((dataPoints[i].second - minY) * stepY)
                 )
             }
+        }
+
+        drawIntoCanvas { canvas ->
+            val paint = Paint().asFrameworkPaint().apply {
+                color = Color.Black.toArgb()
+                textAlign = android.graphics.Paint.Align.LEFT
+                textSize = 16.sp.toPx()
+            }
+
+            canvas.nativeCanvas.drawText("0", 0f, size.height, paint)
+            canvas.nativeCanvas.drawText("90", 0f, 16.dp.toPx(), paint)
+            canvas.nativeCanvas.drawText("Time", size.width / 2, size.height - 16.dp.toPx(), paint)
         }
 
         drawPath(path = path, color = Color.Blue, style = Stroke(width = 4.dp.toPx()))
