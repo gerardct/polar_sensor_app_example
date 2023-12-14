@@ -177,26 +177,30 @@ class InternalSensorControllerImpl(
             _intAngleFromAlg2.update { intAngleFromAlg2 }
 
             // Introduce a delay before updating the angle display
-            GlobalScope.launch(Dispatchers.Main) {
-                delay(50000) // Adjust the delay duration as needed
+           // GlobalScope.launch(Dispatchers.Main) {
+           //     delay(50000) // Adjust the delay duration as needed
 
                 // Update the UI variable
-                _currentGyroUI.update { _currentGyro }
-            }
+            //    _currentGyroUI.update { _currentGyro }
+           // }
 
         }
     }
 
 
 
+
+
+
     // ALGORITHM 1: compute angle of elevation
-    private var lastFilteredAngle: Float = 0.0f // Start with 0 degrees when parallel to the ground
+    private var lastFilteredAngle: Float = -40.0f// Start with 0 degrees when parallel to the ground
     private val alpha: Float = 0.4f // filter factor
 
         private fun computeAngleOfElevation(ax: Float, ay: Float, az: Float): Float {
 
+
             //calculate the angle
-            val angleRad = atan2(az.toDouble(), sqrt(ax * ax + ay * ay).toDouble()).toFloat()
+            val angleRad = atan2(ay.toDouble(), sqrt(ax * ax + az * az).toDouble()).toFloat()
 
             val angleDeg = Math.toDegrees(angleRad.toDouble()).toFloat()
 
@@ -205,13 +209,14 @@ class InternalSensorControllerImpl(
             // Update the previous filtered angle for the next iteration
             lastFilteredAngle = filteredAngle
 
-            return filteredAngle //.absoluteValue
+            //return filteredAngle.absoluteValue
 
+            return filteredAngle.absoluteValue
         }
 
 
     // ALGORITHM 2: Complimentary filter combining linear acceleration and gyroscope
-    private val alpha2: Float = 0.9f // filter factor
+    private val alpha2: Float = 0.5f // filter factor
 
     private fun applyComplementaryFilter(
         ax: Float,
@@ -235,7 +240,7 @@ class InternalSensorControllerImpl(
         )
 
         // Calculate the elevation angle
-        val angleRadians = atan2(filteredAccelerationX, magnitude)
+        val angleRadians = atan2(filteredAccelerationY, magnitude)
 
         // Adjust the angle based on orientation (perpendicular: 90 degrees, parallel: 0 degrees)
         val adjustedAngle = Math.toDegrees(angleRadians.toDouble()).toFloat()
@@ -374,4 +379,8 @@ class InternalSensorControllerImpl(
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
         // Not used in this example
     }
+
+
+
+
 }

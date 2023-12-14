@@ -9,12 +9,9 @@ package mobappdev.example.sensorapplication.ui.viewmodels
  * Last modified: 2023-07-11
  */
 
-//import java.io.File // to be able to save the file
-import android.os.Environment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,13 +19,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
+import javax.inject.Inject
+
+import kotlinx.coroutines.delay
 import java.io.File
 import java.io.FileWriter
+import kotlinx.coroutines.launch
 import java.io.IOException
-import javax.inject.Inject
+//import java.io.File // to be able to save the file
+import android.content.Context
+import android.os.Environment
+
 
 
 @HiltViewModel
@@ -317,8 +320,8 @@ data class DataUiState(
     val timePolList: List<Long> = emptyList(),
     val intAngleFromAlg1List: List<Float> = emptyList(),
     val intAngleFromAlg2List: List<Float> = emptyList(),
-    val timeIntAlg1List: List<Long> = emptyList(),
-    val timeIntAlg2List: List<Long> = emptyList(),
+    val timeIntAlg1List: List<Float?> = emptyList(),
+    val timeIntAlg2List: List<Float?> = emptyList(),
     val connected: Boolean = false,
     val measuring: Boolean = false
 )
