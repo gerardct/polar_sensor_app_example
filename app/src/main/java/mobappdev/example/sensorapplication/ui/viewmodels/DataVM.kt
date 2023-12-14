@@ -253,7 +253,7 @@ class DataVM @Inject constructor(
 
 
     // function to save the CSV data to the file
-    private fun saveCSVToFile() {
+    fun saveCSVToFile() {
         val csvFile = createCsvFile()
 
         try {
@@ -292,7 +292,7 @@ class DataVM @Inject constructor(
         }
     }
 
-    private fun createCsvFile(): File {
+    fun createCsvFile(): File {
        // val directoryPath = "/storage/emulated/0/files" // change directory
         //val directory = getExternalFilesDir(null)  // This gets the external storage directory for your app
 

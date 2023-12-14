@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -150,7 +151,7 @@ fun BluetoothDataScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
-        Text(text = if (state.connected) "Polar sense connected" else "Polar sense disconnected")
+        Text(text = if (state.connected) "Polar sense connected" else "Internal sensors connected")
         Box(
             contentAlignment = Center,
             modifier = Modifier.weight(1f)
@@ -173,9 +174,12 @@ fun BluetoothDataScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
-                )
+                ),
+                modifier = Modifier
+                    .height(60.dp)
+                    .width(140.dp)
             ) {
-                Text(text = "Polar sense")
+                Text(text = "Polar sense", fontSize = 18.sp)
             }
             Button(
                 onClick = vm::disconnectFromSensor,
@@ -183,11 +187,12 @@ fun BluetoothDataScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
-                )
+                ),
+                modifier = Modifier
+                    .height(60.dp)
+                    .width(140.dp)
             ) {
-                Text(text = "Internal")
-               // Text(text = if (internalConnected) "Internal Connected" else "Internal")
-
+                Text(text = "Internal sensors", fontSize = 18.sp)
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -195,75 +200,37 @@ fun BluetoothDataScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround,
             modifier = Modifier.fillMaxWidth()
-        ){ Button(
-                onClick = {vm.startPolar() // Your existing function call
+        ){
+            Button(
+                onClick = {
+                    if (state.connected) {
+                        vm.startPolar()
+                    } else {
+                        vm.startImuStream()
+                    }
                     vm.startRecording()
-                    navController.navigate("Graphscreen")}, // Navigate to Graphscreen,
+                    navController.navigate("Graphscreen")
+                }, // Navigate to Graphscreen,
                 enabled = (state.connected && !state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
-                )
+                ),
+                modifier = Modifier
+                    .height(80.dp)
+                    .width(180.dp)
             ) {
-                Text(text = "Start Polar sensor Stream")
+                Text(text = "Start", fontSize = 22.sp)
             }
         }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround,
-            modifier = Modifier.fillMaxWidth()
-        ){
-            Button(
-                onClick = {
-                    vm.stopDataStream()
-                    vm.stopRecording() //when you press stop, it also stops the data recording
-                },
-                enabled = (state.measuring),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = Color.Gray
-                )
-            ) {
-                Text(text = "Stop\nstream")
-            }
-        }
-
-        // new row for starting /stopping the internal sensor
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround,
-            modifier = Modifier.fillMaxWidth()
-        ){
-            Button(
-                onClick = {
-                    vm.startImuStream()
-                    vm.startRecording() // Start recording when internal stream is started
-                    navController.navigate("Graphscreen")
-                          },
-                enabled = (!state.measuring),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = Color.Gray
-                )
-            ) {
-                Text(text = "Start\nInternal Stream")
-            }
-
             // Display the recording in progress text only if recording is in progress
             Text(
                 text = if (recordingInProgress) "Recording in progress..." else "",
                 fontSize = 16.sp,
                 modifier = Modifier.padding(8.dp)
             )
-
-
-
-
-
-
         }
 
     }
-}
+
 

@@ -1,12 +1,19 @@
 package mobappdev.example.sensorapplication.ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -118,19 +125,25 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Angle 1",
-                    modifier = Modifier.padding(8.dp).align(Alignment.CenterHorizontally)
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .align(Alignment.CenterHorizontally)
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Angle 2",
-                    modifier = Modifier.padding(8.dp).align(Alignment.CenterHorizontally)
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .align(Alignment.CenterHorizontally)
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Time",
-                    modifier = Modifier.padding(8.dp).align(Alignment.CenterHorizontally)
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .align(Alignment.CenterHorizontally)
                 )
             }
         }
@@ -179,6 +192,42 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
 // Chart fills the entire width
             )
         }
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Button(
+                onClick = {
+                    vm.stopDataStream()},
+                enabled = state.measuring,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
+                ),
+                modifier = Modifier
+                    .height(60.dp)
+                    .width(140.dp)
+            ) {
+                Text(text = "STOP", fontSize = 18.sp)
+            }
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Button(
+            onClick = {
+                      vm.saveCSVToFile()
+            },
+            enabled = !state.measuring,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary
+            ),
+            modifier = Modifier
+                .height(40.dp)
+                .width(100.dp)
+        ) {
+            Text(text = "Export", fontSize = 14.sp)
+        }
+
 
     }
 }
@@ -199,13 +248,13 @@ fun LineChartWithTimeData(dataPoints: List<Pair<Long, Float>>, modifier: Modifie
         val path = Path()
         if (dataPointsCount > 0) {
             path.moveTo(
-                ((dataPoints[0].first - dataPoints[0].first) / 50 ) * stepX,
+                ((dataPoints[0].first - dataPoints[0].first) / 20 ) * stepX,
                 size.height - ((dataPoints[0].second - minY) * stepY)
             )
 
             for (i in 1 until dataPointsCount) {
                 path.lineTo(
-                    ((dataPoints[i].first - dataPoints[0].first) /50 ) * stepX,
+                    ((dataPoints[i].first - dataPoints[0].first) /20 ) * stepX,
                     size.height - ((dataPoints[i].second - minY) * stepY)
                 )
             }
@@ -220,7 +269,7 @@ fun LineChartWithTimeData(dataPoints: List<Pair<Long, Float>>, modifier: Modifie
 
             canvas.nativeCanvas.drawText("0", 0f, size.height, paint)
             canvas.nativeCanvas.drawText("90", 0f, 16.dp.toPx(), paint)
-            canvas.nativeCanvas.drawText("Time", size.width / 2, size.height - 16.dp.toPx(), paint)
+            canvas.nativeCanvas.drawText("Time", size.width / 2, size.height - 24.dp.toPx(), paint)
         }
 
         drawPath(path = path, color = Color.Blue, style = Stroke(width = 4.dp.toPx()))
