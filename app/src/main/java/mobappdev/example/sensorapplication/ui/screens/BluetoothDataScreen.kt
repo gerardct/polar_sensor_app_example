@@ -8,6 +8,8 @@ package mobappdev.example.sensorapplication.ui.screens
  * Last modified: 2023-07-11
  */
 
+import android.os.Environment
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,6 +45,7 @@ import mobappdev.example.sensorapplication.ui.viewmodels.CombinedPolarSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.CombinedSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 import mobappdev.example.sensorapplication.ui.viewmodels.internalSensorData
+import java.io.File
 
 
 @Composable
@@ -50,6 +55,12 @@ fun BluetoothDataScreen(
     val state = vm.state.collectAsStateWithLifecycle().value
     val internalState = vm.internalState.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
+
+    val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+    val csvFiles: List<File> = directory.listFiles { file -> file.extension == "csv" }?.toList() ?: emptyList()
+    val fileNames: List<String> = csvFiles.map { it.name }
+
+
 
     val recordingInProgress by vm.recordingInProgress.collectAsState()
 
@@ -147,14 +158,23 @@ fun BluetoothDataScreen(
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = if (state.connected) "Polar sense connected" else "Internal sensors connected")
+        Spacer(modifier = Modifier.height(200.dp))
+        Text(
+            text = "Saved data",
+            modifier = Modifier
+                .padding(8.dp)
+                .align(Alignment.CenterHorizontally),
+            fontWeight = FontWeight.Bold, // Apply bold font weight
+            fontSize = 18.sp // Set the font size to 18 sp (or adjust as needed)
+        )
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.weight(1f)
         ) {
-
+            DisplayFileNames(fileNames = fileNames)
         }
 
         Text(text = "Select sensor:")
@@ -227,6 +247,22 @@ fun BluetoothDataScreen(
         }
 
     }
+
+@Composable
+fun DisplayFileNames(fileNames: List<String>) {
+    LazyColumn {
+        items(fileNames.size) { index ->
+            Text(
+                text = fileNames[index],
+                modifier = Modifier
+                    .padding(8.dp)
+                    .clickable(enabled = false) {} // Disable the clickable behavior
+            )
+        }
+    }
+}
+
+
 
 
 

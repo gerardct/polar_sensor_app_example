@@ -2,6 +2,7 @@ package mobappdev.example.sensorapplication.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -64,8 +65,12 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
             val newDataPoint: Pair<Long, Float> = if (state.connected && state.measuring) {
                 when (val data = combinedPolarSensorData) {
                     is CombinedPolarSensorData.AngleData -> {
-                        Pair(System.currentTimeMillis(), data.angle1 ?: 0f) // Use angle1 or modify as needed
+                        Pair(
+                            System.currentTimeMillis(),
+                            data.angle1 ?: 0f
+                        ) // Use angle1 or modify as needed
                     }
+
                     else -> Pair(0L, 0f)
                 }
             } else {
@@ -74,8 +79,12 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
             val newDataPoint2: Pair<Long, Float> = if (state.connected && state.measuring) {
                 when (val data = combinedPolarSensorData) {
                     is CombinedPolarSensorData.AngleData -> {
-                        Pair(System.currentTimeMillis(), data.angle2 ?: 0f) // Use angle1 or modify as needed
+                        Pair(
+                            System.currentTimeMillis(),
+                            data.angle2 ?: 0f
+                        ) // Use angle1 or modify as needed
                     }
+
                     else -> Pair(0L, 0f)
                 }
             } else {
@@ -88,22 +97,25 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
                         Pair(System.currentTimeMillis(), internalData.intAngle1 ?: 0f)
                         // Use intAngle1 or modify as needed
                     }
+
                     else -> Pair(0L, 0f)
                 }
             } else {
                 Pair(0L, 0f)
             }
-            val newDataPointInternal2: Pair<Long, Float> = if (!state.connected && state.measuring) {
-                when (val internalData = combinedInternalSensorData) {
-                    is internalSensorData.InternalAngles -> {
-                        Pair(System.currentTimeMillis(), internalData.intAngle2 ?: 0f)
-                        // Use intAngle1 or modify as needed
+            val newDataPointInternal2: Pair<Long, Float> =
+                if (!state.connected && state.measuring) {
+                    when (val internalData = combinedInternalSensorData) {
+                        is internalSensorData.InternalAngles -> {
+                            Pair(System.currentTimeMillis(), internalData.intAngle2 ?: 0f)
+                            // Use intAngle1 or modify as needed
+                        }
+
+                        else -> Pair(0L, 0f)
                     }
-                    else -> Pair(0L, 0f)
+                } else {
+                    Pair(0L, 0f)
                 }
-            } else {
-                Pair(0L, 0f)
-            }
 
             dataPoints = dataPoints + newDataPoint
             dataPoints2 = dataPoints2 + newDataPoint2
@@ -176,116 +188,117 @@ fun GraphScreen(vm: DataVM, navController: NavController) {
             // Remove the Column for time text
         }
         Column(modifier = Modifier.weight(1f)) {
-            LineChartWithTimeData(
-                dataPoints = if (state.connected) dataPoints else internalDataPoints,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.5f) // Chart fills half of the available height
-// Adjust scaleX for wider display
-            )
-            LineChartWithTimeData(
-                dataPoints = if (state.connected) dataPoints2 else internalDataPoints2,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.5f) // Chart fills half of the available height
-// Chart fills the entire width
-            )
-        }
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                LineChartWithTimeData(
+                    dataPoints = if (state.connected) dataPoints else internalDataPoints,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight() // Chart fills the available height evenly
+                    // Adjust scaleX for wider display
+                )
+            }
+
+            Box(modifier = Modifier.weight(1f)) {
+                LineChartWithTimeData(
+                    dataPoints = if (state.connected) dataPoints2 else internalDataPoints2,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight() // Chart fills the available height evenly
+                    // Chart fills the entire width
+                )
+            }
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = {
+                        vm.stopDataStream()
+                        vm.stopRecording()
+                    },
+                    enabled = state.measuring,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    ),
+                    modifier = Modifier
+                        .height(60.dp)
+                        .width(140.dp)
+                ) {
+                    Text(text = "STOP", fontSize = 18.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
             Button(
                 onClick = {
-                    vm.stopDataStream()
-                          vm.stopRecording()},
-                enabled = state.measuring,
+                    vm.saveCSVToFile()
+                },
+                enabled = !state.measuring,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary
                 ),
                 modifier = Modifier
-                    .height(60.dp)
-                    .width(140.dp)
+                    .height(40.dp)
+                    .width(100.dp)
             ) {
-                Text(text = "STOP", fontSize = 18.sp)
+                Text(text = "Export ", fontSize = 14.sp)
             }
+
+
         }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Button(
-            onClick = {
-                      vm.saveCSVToFile()
-            },
-            enabled = !state.measuring,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary
-            ),
-            modifier = Modifier
-                .height(40.dp)
-                .width(100.dp)
-        ) {
-            Text(text = "Export ", fontSize = 14.sp)
-        }
-
-
     }
 }
 
 
 
+    @Composable
+    fun LineChartWithTimeData(dataPoints: List<Pair<Long, Float>>, modifier: Modifier = Modifier) {
+        Canvas(modifier = modifier.fillMaxSize()) {
+            val maxY = 90f
+            val minY = 0f
+            val dataPointsCount = dataPoints.size
 
-@Composable
-fun LineChartWithTimeData(dataPoints: List<Pair<Long, Float>>, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.fillMaxSize()) {
-        val maxY = 90f
-        val minY = 0f
-        val dataPointsCount = dataPoints.size
+            val stepX = size.width / (dataPointsCount - 1)
+            val stepY = size.height / (maxY - minY)
 
-        val stepX = size.width / (dataPointsCount - 1)
-        val stepY = size.height / (maxY - minY)
+            val path = Path()
+            if (dataPointsCount > 0) {
+                path.moveTo(
+                    ((dataPoints[0].first - dataPoints[0].first) / 20) * stepX,
+                    size.height - ((dataPoints[0].second - minY) * stepY)
+                )
 
-        val path = Path()
-        if (dataPointsCount > 0) {
-            path.moveTo(
-                ((dataPoints[0].first - dataPoints[0].first) / 20 ) * stepX,
-                size.height - ((dataPoints[0].second - minY) * stepY)
-            )
+                for (i in 1 until dataPointsCount) {
+                    path.lineTo(
+                        ((dataPoints[i].first - dataPoints[0].first) / 20) * stepX,
+                        size.height - ((dataPoints[i].second - minY) * stepY)
+                    )
+                }
+            }
 
-            for (i in 1 until dataPointsCount) {
-                path.lineTo(
-                    ((dataPoints[i].first - dataPoints[0].first) /20 ) * stepX,
-                    size.height - ((dataPoints[i].second - minY) * stepY)
+            drawIntoCanvas { canvas ->
+                val paint = Paint().asFrameworkPaint().apply {
+                    color = Color.Black.toArgb()
+                    textAlign = android.graphics.Paint.Align.LEFT
+                    textSize = 16.sp.toPx()
+                }
+
+                canvas.nativeCanvas.drawText("0", 0f, size.height, paint)
+                canvas.nativeCanvas.drawText("90", 0f, 16.dp.toPx(), paint)
+                canvas.nativeCanvas.drawText(
+                    "Time",
+                    size.width / 2,
+                    size.height - 24.dp.toPx(),
+                    paint
                 )
             }
+
+            drawPath(path = path, color = Color.Blue, style = Stroke(width = 4.dp.toPx()))
         }
-
-        drawIntoCanvas { canvas ->
-            val paint = Paint().asFrameworkPaint().apply {
-                color = Color.Black.toArgb()
-                textAlign = android.graphics.Paint.Align.LEFT
-                textSize = 16.sp.toPx()
-            }
-
-            canvas.nativeCanvas.drawText("0", 0f, size.height, paint)
-            canvas.nativeCanvas.drawText("90", 0f, 16.dp.toPx(), paint)
-            canvas.nativeCanvas.drawText("Time", size.width / 2, size.height - 24.dp.toPx(), paint)
-        }
-
-        drawPath(path = path, color = Color.Blue, style = Stroke(width = 4.dp.toPx()))
     }
-}
 
 
 
 
-
-
-@Preview
-@Composable
-fun GraphScreenPreview() {
-    val timeList = listOf(0L, 1L, 2L, 3L, 4L, 5L)
-    val angleList1 = listOf(0f, 1f, 2f, 3f, 4f, 5f)
-    val angleList2 = listOf(0f, 2f, 4f, 6f, 8f, 10f)
-}
 
